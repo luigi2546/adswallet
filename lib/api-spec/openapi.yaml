@@ -3,13 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AdWallet Africa API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: wallet
+    description: Wallet and credit operations
+  - name: campaigns
+    description: Campaign management
+  - name: analytics
+    description: Analytics and reporting
+  - name: activity
+    description: Activity feed and notifications
+  - name: platforms
+    description: Ad platform operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +37,345 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResult"
+
+  # Wallet
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Get wallet balance and summary
+      responses:
+        "200":
+          description: Wallet info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallet/deposit:
+    post:
+      operationId: depositFunds
+      tags: [wallet]
+      summary: Deposit funds via mobile money
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DepositInput"
+      responses:
+        "201":
+          description: Deposit initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /wallet/transactions:
+    get:
+      operationId: getTransactions
+      tags: [wallet]
+      summary: List wallet transactions
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+        - in: query
+          name: type
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transactions list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionList"
+
+  # Campaigns
+  /campaigns:
+    get:
+      operationId: getCampaigns
+      tags: [campaigns]
+      summary: List all campaigns
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: platform
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Campaigns list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a new campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "201":
+          description: Campaign created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}:
+    get:
+      operationId: getCampaign
+      tags: [campaigns]
+      summary: Get a campaign by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    patch:
+      operationId: updateCampaign
+      tags: [campaigns]
+      summary: Update a campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignUpdate"
+      responses:
+        "200":
+          description: Updated campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    delete:
+      operationId: deleteCampaign
+      tags: [campaigns]
+      summary: Delete a campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResult"
+
+  /campaigns/{id}/launch:
+    post:
+      operationId: launchCampaign
+      tags: [campaigns]
+      summary: Launch a campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign launched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}/pause:
+    post:
+      operationId: pauseCampaign
+      tags: [campaigns]
+      summary: Pause an active campaign
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  # Analytics
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [analytics]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /analytics/performance:
+    get:
+      operationId: getPerformanceMetrics
+      tags: [analytics]
+      summary: Get campaign performance metrics over time
+      parameters:
+        - in: query
+          name: range
+          schema:
+            type: string
+            enum: [7d, 30d, 90d]
+        - in: query
+          name: campaignId
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PerformancePoint"
+
+  /analytics/platform-breakdown:
+    get:
+      operationId: getPlatformBreakdown
+      tags: [analytics]
+      summary: Get spend breakdown by platform
+      responses:
+        "200":
+          description: Platform breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformBreakdown"
+
+  # Activity Feed
+  /activity:
+    get:
+      operationId: getActivity
+      tags: [activity]
+      summary: Get recent activity feed
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +386,315 @@ components:
       required:
         - status
 
+    MessageResult:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    # Auth
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        businessName:
+          type: ["string", "null"]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, name, email, role, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, agency, admin]
+        businessName:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    # Wallet
+    Wallet:
+      type: object
+      required: [id, userId, creditBalance, totalDeposited, totalSpent, currency]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        creditBalance:
+          type: number
+          description: Available ad credits
+        totalDeposited:
+          type: number
+        totalSpent:
+          type: number
+        currency:
+          type: string
+
+    DepositInput:
+      type: object
+      required: [amount, method, phone]
+      properties:
+        amount:
+          type: number
+          minimum: 1
+        method:
+          type: string
+          enum: [momo, bank_transfer, card]
+        phone:
+          type: ["string", "null"]
+        provider:
+          type: ["string", "null"]
+          description: MTN, Vodafone, AirtelTigo
+
+    Transaction:
+      type: object
+      required: [id, type, amount, status, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [deposit, spend, refund]
+        amount:
+          type: number
+        credits:
+          type: ["number", "null"]
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        description:
+          type: ["string", "null"]
+        reference:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    TransactionList:
+      type: object
+      required: [transactions, total]
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total:
+          type: integer
+
+    # Campaigns
+    Campaign:
+      type: object
+      required: [id, name, platform, objective, status, dailyBudget, totalBudget, creditsUsed, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        platform:
+          type: string
+          enum: [facebook, instagram, tiktok, google, youtube]
+        objective:
+          type: string
+          enum: [awareness, engagement, traffic, leads, sales]
+        status:
+          type: string
+          enum: [draft, active, paused, completed]
+        dailyBudget:
+          type: number
+        totalBudget:
+          type: number
+        creditsUsed:
+          type: number
+        impressions:
+          type: ["integer", "null"]
+        clicks:
+          type: ["integer", "null"]
+        conversions:
+          type: ["integer", "null"]
+        reach:
+          type: ["integer", "null"]
+        headline:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        targetLocation:
+          type: ["string", "null"]
+        targetAge:
+          type: ["string", "null"]
+        targetGender:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        launchedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    CampaignInput:
+      type: object
+      required: [name, platform, objective, dailyBudget, totalBudget]
+      properties:
+        name:
+          type: string
+        platform:
+          type: string
+          enum: [facebook, instagram, tiktok, google, youtube]
+        objective:
+          type: string
+          enum: [awareness, engagement, traffic, leads, sales]
+        dailyBudget:
+          type: number
+        totalBudget:
+          type: number
+        headline:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        targetLocation:
+          type: ["string", "null"]
+        targetAge:
+          type: ["string", "null"]
+        targetGender:
+          type: ["string", "null"]
+
+    CampaignUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        headline:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        dailyBudget:
+          type: ["number", "null"]
+        totalBudget:
+          type: ["number", "null"]
+        targetLocation:
+          type: ["string", "null"]
+        targetAge:
+          type: ["string", "null"]
+        targetGender:
+          type: ["string", "null"]
+
+    # Analytics
+    DashboardSummary:
+      type: object
+      required: [creditBalance, totalDeposited, totalSpent, activeCampaigns, completedCampaigns, draftCampaigns, totalImpressions, totalClicks, totalConversions, averageCtr, averageCpc]
+      properties:
+        creditBalance:
+          type: number
+        totalDeposited:
+          type: number
+        totalSpent:
+          type: number
+        activeCampaigns:
+          type: integer
+        completedCampaigns:
+          type: integer
+        draftCampaigns:
+          type: integer
+        totalImpressions:
+          type: integer
+        totalClicks:
+          type: integer
+        totalConversions:
+          type: integer
+        averageCtr:
+          type: number
+        averageCpc:
+          type: number
+
+    PerformancePoint:
+      type: object
+      required: [date, spend, impressions, clicks, conversions]
+      properties:
+        date:
+          type: string
+        spend:
+          type: number
+        impressions:
+          type: integer
+        clicks:
+          type: integer
+        conversions:
+          type: integer
+        ctr:
+          type: number
+        cpc:
+          type: number
+
+    PlatformBreakdown:
+      type: object
+      required: [platform, spend, campaigns, impressions, clicks]
+      properties:
+        platform:
+          type: string
+        spend:
+          type: number
+        campaigns:
+          type: integer
+        impressions:
+          type: integer
+        clicks:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required: [id, type, title, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [deposit, campaign_launched, campaign_paused, campaign_completed, credits_deducted, refund]
+        title:
+          type: string
+        description:
+          type: string
+        amount:
+          type: ["number", "null"]
+        campaignId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time

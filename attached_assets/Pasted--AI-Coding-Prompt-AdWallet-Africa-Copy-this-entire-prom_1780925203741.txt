@@ -1,0 +1,709 @@
+# AI Coding Prompt — AdWallet Africa
+
+Copy this entire prompt into Replit AI, Cursor, Lovable, Bolt, or any AI coding agent.
+
+---
+
+# PROJECT OVERVIEW
+
+Build a production-ready SaaS platform called **AdWallet Africa**.
+
+The platform allows African businesses, creators, churches, NGOs, agencies, and entrepreneurs to fund advertising campaigns using Mobile Money without needing an international credit card.
+
+Users can deposit funds through Mobile Money and receive Ad Credits (tokens) that can be used to launch campaigns on Facebook, Instagram, TikTok, Google, and YouTube.
+
+The system should look modern, premium, and fintech-grade, similar to Stripe, Brex, Linear, Notion, and Ramp.
+
+---
+
+# PRODUCT NAME
+
+AdWallet Africa
+
+Tagline:
+
+"Run Ads With Mobile Money."
+
+Alternative:
+
+"One Wallet. Every Advertising Platform."
+
+---
+
+# TECH STACK
+
+Frontend:
+
+* Next.js 15
+* TypeScript
+* TailwindCSS
+* shadcn/ui
+* Framer Motion
+* Recharts
+
+Backend:
+
+* NestJS
+* TypeScript
+
+Database:
+
+* PostgreSQL
+
+ORM:
+
+* Prisma
+
+Authentication:
+
+* JWT
+* OAuth
+* Google Login
+
+Storage:
+
+* AWS S3 compatible storage
+
+Queue:
+
+* Redis
+* BullMQ
+
+Payments:
+
+* Hubtel
+* Paystack
+* Flutterwave
+
+Infrastructure:
+
+* Docker
+* CI/CD Ready
+* Production Ready
+
+---
+
+# USER ROLES
+
+### 1. User
+
+Can:
+
+* Create account
+* Deposit funds
+* Buy ad credits
+* Create campaigns
+* Manage campaigns
+* View analytics
+* View transactions
+
+---
+
+### 2. Agency
+
+Can:
+
+* Manage multiple clients
+* Run campaigns for clients
+* Generate reports
+* Create team members
+
+---
+
+### 3. Admin
+
+Can:
+
+* Manage users
+* Manage payments
+* Manage ad accounts
+* Manage campaigns
+* Manage revenue
+* View system analytics
+
+---
+
+# CORE CONCEPT
+
+Users deposit local currency.
+
+Example:
+
+100 GHS
+
+The system converts this into:
+
+100 Ad Credits
+
+Credits can then be spent on:
+
+* Facebook Ads
+* Instagram Ads
+* TikTok Ads
+* Google Ads
+* YouTube Ads
+
+The platform handles all payment processing and ad spending.
+
+---
+
+# LANDING PAGE
+
+Create a stunning modern landing page.
+
+Sections:
+
+### Hero
+
+Headline:
+
+Run Facebook & TikTok Ads With Mobile Money
+
+Subheadline:
+
+Fund advertising campaigns without international credit cards.
+
+CTA:
+
+* Start Free
+* Book Demo
+
+Animation:
+
+* Floating wallet
+* Campaign analytics cards
+* Credit balance widgets
+
+---
+
+### Features
+
+Cards:
+
+* Mobile Money Funding
+* Ad Credits Wallet
+* Multi Platform Ads
+* Campaign Analytics
+* AI Ad Generator
+* Agency Dashboard
+
+---
+
+### How It Works
+
+Step 1:
+Deposit Funds
+
+Step 2:
+Receive Ad Credits
+
+Step 3:
+Create Campaign
+
+Step 4:
+Launch Ads
+
+---
+
+### Supported Platforms
+
+Display:
+
+* Facebook
+* Instagram
+* TikTok
+* YouTube
+* Google
+
+---
+
+### Testimonials
+
+Beautiful card layout.
+
+---
+
+### Pricing
+
+Starter
+
+Business
+
+Agency
+
+Enterprise
+
+---
+
+### Footer
+
+Terms
+
+Privacy
+
+Contact
+
+Documentation
+
+---
+
+# AUTHENTICATION
+
+Features:
+
+* Email signup
+* Login
+* Forgot password
+* OTP verification
+* Google OAuth
+* JWT sessions
+
+---
+
+# USER DASHBOARD
+
+Modern fintech dashboard.
+
+Widgets:
+
+### Wallet Balance
+
+Show:
+
+* Available Credits
+* Total Deposits
+* Total Ad Spend
+
+---
+
+### Campaign Summary
+
+Show:
+
+* Active Campaigns
+* Completed Campaigns
+* Draft Campaigns
+
+---
+
+### Performance Overview
+
+Charts:
+
+* Spend
+* Clicks
+* Reach
+* Conversions
+
+---
+
+### Recent Activity
+
+Timeline:
+
+* Deposit completed
+* Campaign launched
+* Credits deducted
+
+---
+
+# WALLET SYSTEM
+
+### Wallet Features
+
+Deposit funds
+
+Transaction history
+
+Credit balance
+
+Invoice generation
+
+Export transactions
+
+Refund requests
+
+---
+
+### Funding Methods
+
+Mobile Money
+
+Bank Transfer
+
+Card Payment
+
+Crypto (Optional)
+
+---
+
+# CAMPAIGN BUILDER
+
+Create Campaign Wizard
+
+Step 1
+
+Select Platform:
+
+* Facebook
+* Instagram
+* TikTok
+* Google
+* YouTube
+
+---
+
+Step 2
+
+Campaign Objective
+
+Options:
+
+* Awareness
+* Engagement
+* Traffic
+* Leads
+* Sales
+
+---
+
+Step 3
+
+Audience
+
+Location
+
+Gender
+
+Age
+
+Interests
+
+Languages
+
+---
+
+Step 4
+
+Budget
+
+Daily budget
+
+Lifetime budget
+
+Credit estimation
+
+---
+
+Step 5
+
+Creative
+
+Upload image
+
+Upload video
+
+Add headline
+
+Add description
+
+CTA button
+
+---
+
+Step 6
+
+Review
+
+Launch campaign
+
+---
+
+# AI AD GENERATOR
+
+Integrated AI assistant.
+
+Can generate:
+
+### Headlines
+
+### Ad Copy
+
+### CTA Suggestions
+
+### Audience Suggestions
+
+### Keyword Suggestions
+
+### Campaign Optimization Tips
+
+---
+
+# ANALYTICS
+
+Dashboard includes:
+
+Spend
+
+Impressions
+
+Clicks
+
+CTR
+
+CPC
+
+Conversions
+
+ROAS
+
+Revenue
+
+---
+
+Charts:
+
+Daily
+
+Weekly
+
+Monthly
+
+Custom range
+
+---
+
+# AGENCY DASHBOARD
+
+Agency Features:
+
+Client management
+
+Client wallets
+
+Campaign management
+
+Reports
+
+Team members
+
+Permissions
+
+White label branding
+
+---
+
+# ADMIN PANEL
+
+Admin Features:
+
+User management
+
+Campaign management
+
+Wallet management
+
+Transaction monitoring
+
+Revenue dashboard
+
+Credit management
+
+Support tickets
+
+Fraud detection
+
+System settings
+
+---
+
+# DATABASE SCHEMA
+
+Tables:
+
+Users
+
+Roles
+
+Wallets
+
+WalletTransactions
+
+Campaigns
+
+CampaignPlatforms
+
+CampaignAssets
+
+AdCredits
+
+Deposits
+
+Withdrawals
+
+Invoices
+
+Subscriptions
+
+Teams
+
+Organizations
+
+Notifications
+
+SupportTickets
+
+AuditLogs
+
+Analytics
+
+SystemSettings
+
+---
+
+# NOTIFICATIONS
+
+Email
+
+SMS
+
+Push Notifications
+
+In-App Notifications
+
+---
+
+# SECURITY
+
+RBAC
+
+Rate limiting
+
+JWT
+
+Audit logs
+
+Encryption
+
+2FA
+
+Activity monitoring
+
+Device management
+
+Session management
+
+---
+
+# UI DESIGN REQUIREMENTS
+
+Design should feel like:
+
+* Stripe
+* Ramp
+* Brex
+* Linear
+* Notion
+
+Requirements:
+
+* Dark mode
+* Light mode
+* Glassmorphism effects
+* Smooth animations
+* Mobile responsive
+* Premium fintech aesthetic
+* Accessibility compliant
+* Fast loading
+
+---
+
+# PHASE 2 FEATURES
+
+AI Campaign Optimization
+
+AI Budget Recommendations
+
+AI Audience Builder
+
+AI Creative Generator
+
+AI Reporting Assistant
+
+AI Campaign Monitoring
+
+---
+
+# PHASE 3 FEATURES
+
+Mobile Apps
+
+iOS
+
+Android
+
+React Native
+
+---
+
+# PHASE 4 FEATURES
+
+Marketplace
+
+Verified Ad Experts
+
+Campaign Templates
+
+Creative Templates
+
+Influencer Marketplace
+
+---
+
+# PHASE 5 FEATURES
+
+Pan-African Expansion
+
+Ghana
+
+Nigeria
+
+Kenya
+
+Uganda
+
+South Africa
+
+Tanzania
+
+Rwanda
+
+Botswana
+
+---
+
+# FINAL REQUIREMENTS
+
+Generate:
+
+* Full frontend
+* Full backend
+* PostgreSQL schema
+* Prisma models
+* REST APIs
+* Admin dashboard
+* Agency dashboard
+* User dashboard
+* Mobile responsive UI
+* Authentication system
+* Wallet system
+* Campaign management
+* Analytics system
+* AI integration architecture
+* Docker deployment files
+* Seed data
+* Environment variables
+* Production-ready code structure
+* Complete documentation
+
+Build as a scalable SaaS capable of serving 1,000,000+ users across Africa.
