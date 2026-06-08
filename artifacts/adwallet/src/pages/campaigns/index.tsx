@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Megaphone, Play, Pause, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Megaphone, Play, Pause, Trash2, ExternalLink, Zap } from "lucide-react";
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -78,12 +78,20 @@ export default function CampaignsPage() {
           <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
           <p className="text-muted-foreground">Manage and track your ad campaigns.</p>
         </div>
-        <Link href="/campaigns/new">
-          <Button className="gap-2" data-testid="button-new-campaign">
-            <Plus className="w-4 h-4" />
-            New Campaign
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/boost">
+            <Button variant="outline" className="gap-2" data-testid="button-boost-content">
+              <Zap className="w-4 h-4" />
+              Boost Content
+            </Button>
+          </Link>
+          <Link href="/campaigns/new">
+            <Button className="gap-2" data-testid="button-new-campaign">
+              <Plus className="w-4 h-4" />
+              New Campaign
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

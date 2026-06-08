@@ -17,6 +17,7 @@ import NewCampaignPage from "./pages/campaigns/new";
 import CampaignDetail from "./pages/campaigns/detail";
 import AnalyticsPage from "./pages/analytics";
 import SettingsPage from "./pages/settings";
+import BoostPage from "./pages/boost";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/campaigns"><ProtectedRoute component={CampaignsPage} /></Route>
       <Route path="/campaigns/new"><ProtectedRoute component={NewCampaignPage} /></Route>
       <Route path="/campaigns/:id"><ProtectedRoute component={CampaignDetail} /></Route>
+      <Route path="/boost"><ProtectedRoute component={BoostPage} /></Route>
       <Route path="/analytics"><ProtectedRoute component={AnalyticsPage} /></Route>
       <Route path="/settings"><ProtectedRoute component={SettingsPage} /></Route>
       <Route component={NotFound} />

@@ -25,6 +25,7 @@ import type {
   Campaign,
   CampaignInput,
   CampaignUpdate,
+  ConnectAccountInput,
   DashboardSummary,
   DepositInput,
   GetActivityParams,
@@ -37,6 +38,8 @@ import type {
   PerformancePoint,
   PlatformBreakdown,
   RegisterInput,
+  SocialAccount,
+  SocialPost,
   Transaction,
   TransactionList,
   User,
@@ -1394,6 +1397,301 @@ export function useGetPlatformBreakdown<TData = Awaited<ReturnType<typeof getPla
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPlatformBreakdownQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetSocialAccountsUrl = () => {
+
+
+
+
+  return `/api/social-accounts`
+}
+
+/**
+ * @summary List connected social accounts
+ */
+export const getSocialAccounts = async ( options?: RequestInit): Promise<SocialAccount[]> => {
+
+  return customFetch<SocialAccount[]>(getGetSocialAccountsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSocialAccountsQueryKey = () => {
+    return [
+    `/api/social-accounts`
+    ] as const;
+    }
+
+
+export const getGetSocialAccountsQueryOptions = <TData = Awaited<ReturnType<typeof getSocialAccounts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSocialAccountsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialAccounts>>> = ({ signal }) => getSocialAccounts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialAccounts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSocialAccountsQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialAccounts>>>
+export type GetSocialAccountsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List connected social accounts
+ */
+
+export function useGetSocialAccounts<TData = Awaited<ReturnType<typeof getSocialAccounts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSocialAccountsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getConnectSocialAccountUrl = () => {
+
+
+
+
+  return `/api/social-accounts`
+}
+
+/**
+ * @summary Connect a social media account
+ */
+export const connectSocialAccount = async (connectAccountInput: ConnectAccountInput, options?: RequestInit): Promise<SocialAccount> => {
+
+  return customFetch<SocialAccount>(getConnectSocialAccountUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      connectAccountInput,)
+  }
+);}
+
+
+
+
+export const getConnectSocialAccountMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectSocialAccount>>, TError,{data: BodyType<ConnectAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof connectSocialAccount>>, TError,{data: BodyType<ConnectAccountInput>}, TContext> => {
+
+const mutationKey = ['connectSocialAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof connectSocialAccount>>, {data: BodyType<ConnectAccountInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  connectSocialAccount(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConnectSocialAccountMutationResult = NonNullable<Awaited<ReturnType<typeof connectSocialAccount>>>
+    export type ConnectSocialAccountMutationBody = BodyType<ConnectAccountInput>
+    export type ConnectSocialAccountMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Connect a social media account
+ */
+export const useConnectSocialAccount = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof connectSocialAccount>>, TError,{data: BodyType<ConnectAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof connectSocialAccount>>,
+        TError,
+        {data: BodyType<ConnectAccountInput>},
+        TContext
+      > => {
+      return useMutation(getConnectSocialAccountMutationOptions(options));
+    }
+
+export const getDisconnectSocialAccountUrl = (id: number,) => {
+
+
+
+
+  return `/api/social-accounts/${id}`
+}
+
+/**
+ * @summary Disconnect a social account
+ */
+export const disconnectSocialAccount = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDisconnectSocialAccountUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDisconnectSocialAccountMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectSocialAccount>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof disconnectSocialAccount>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['disconnectSocialAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof disconnectSocialAccount>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  disconnectSocialAccount(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DisconnectSocialAccountMutationResult = NonNullable<Awaited<ReturnType<typeof disconnectSocialAccount>>>
+
+    export type DisconnectSocialAccountMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Disconnect a social account
+ */
+export const useDisconnectSocialAccount = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof disconnectSocialAccount>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof disconnectSocialAccount>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDisconnectSocialAccountMutationOptions(options));
+    }
+
+export const getGetSocialPostsUrl = (id: number,) => {
+
+
+
+
+  return `/api/social-accounts/${id}/posts`
+}
+
+/**
+ * @summary Get recent posts from a connected account
+ */
+export const getSocialPosts = async (id: number, options?: RequestInit): Promise<SocialPost[]> => {
+
+  return customFetch<SocialPost[]>(getGetSocialPostsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSocialPostsQueryKey = (id: number,) => {
+    return [
+    `/api/social-accounts/${id}/posts`
+    ] as const;
+    }
+
+
+export const getGetSocialPostsQueryOptions = <TData = Awaited<ReturnType<typeof getSocialPosts>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSocialPostsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSocialPosts>>> = ({ signal }) => getSocialPosts(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSocialPosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSocialPostsQueryResult = NonNullable<Awaited<ReturnType<typeof getSocialPosts>>>
+export type GetSocialPostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get recent posts from a connected account
+ */
+
+export function useGetSocialPosts<TData = Awaited<ReturnType<typeof getSocialPosts>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSocialPosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSocialPostsQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

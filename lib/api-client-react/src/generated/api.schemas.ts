@@ -277,6 +277,81 @@ export interface PlatformBreakdown {
   clicks: number;
 }
 
+export type SocialAccountPlatform = typeof SocialAccountPlatform[keyof typeof SocialAccountPlatform];
+
+
+export const SocialAccountPlatform = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  google: 'google',
+  youtube: 'youtube',
+} as const;
+
+export type SocialAccountStatus = typeof SocialAccountStatus[keyof typeof SocialAccountStatus];
+
+
+export const SocialAccountStatus = {
+  connected: 'connected',
+  expired: 'expired',
+  error: 'error',
+} as const;
+
+export interface SocialAccount {
+  id: number;
+  platform: SocialAccountPlatform;
+  accountName: string;
+  accountHandle: string;
+  /** @nullable */
+  avatarUrl?: string | null;
+  followers: number;
+  status: SocialAccountStatus;
+  connectedAt: string;
+}
+
+export type ConnectAccountInputPlatform = typeof ConnectAccountInputPlatform[keyof typeof ConnectAccountInputPlatform];
+
+
+export const ConnectAccountInputPlatform = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  google: 'google',
+  youtube: 'youtube',
+} as const;
+
+export interface ConnectAccountInput {
+  platform: ConnectAccountInputPlatform;
+  accountName: string;
+  accountHandle: string;
+}
+
+export type SocialPostPostType = typeof SocialPostPostType[keyof typeof SocialPostPostType];
+
+
+export const SocialPostPostType = {
+  post: 'post',
+  reel: 'reel',
+  story: 'story',
+  video: 'video',
+} as const;
+
+export interface SocialPost {
+  id: string;
+  socialAccountId: number;
+  platform: string;
+  postType: SocialPostPostType;
+  /** @nullable */
+  content?: string | null;
+  /** @nullable */
+  mediaUrl?: string | null;
+  likes: number;
+  comments: number;
+  shares: number;
+  reach: number;
+  postedAt: string;
+}
+
 export type ActivityItemType = typeof ActivityItemType[keyof typeof ActivityItemType];
 
 

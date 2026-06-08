@@ -371,6 +371,63 @@ export const GetPlatformBreakdownResponse = zod.array(GetPlatformBreakdownRespon
 
 
 /**
+ * @summary List connected social accounts
+ */
+export const GetSocialAccountsResponseItem = zod.object({
+  "id": zod.number(),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'google', 'youtube']),
+  "accountName": zod.string(),
+  "accountHandle": zod.string(),
+  "avatarUrl": zod.string().nullish(),
+  "followers": zod.number(),
+  "status": zod.enum(['connected', 'expired', 'error']),
+  "connectedAt": zod.coerce.date()
+})
+export const GetSocialAccountsResponse = zod.array(GetSocialAccountsResponseItem)
+
+
+/**
+ * @summary Connect a social media account
+ */
+export const ConnectSocialAccountBody = zod.object({
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'google', 'youtube']),
+  "accountName": zod.string(),
+  "accountHandle": zod.string()
+})
+
+
+/**
+ * @summary Disconnect a social account
+ */
+export const DisconnectSocialAccountParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get recent posts from a connected account
+ */
+export const GetSocialPostsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetSocialPostsResponseItem = zod.object({
+  "id": zod.string(),
+  "socialAccountId": zod.number(),
+  "platform": zod.string(),
+  "postType": zod.enum(['post', 'reel', 'story', 'video']),
+  "content": zod.string().nullish(),
+  "mediaUrl": zod.string().nullish(),
+  "likes": zod.number(),
+  "comments": zod.number(),
+  "shares": zod.number(),
+  "reach": zod.number(),
+  "postedAt": zod.coerce.date()
+})
+export const GetSocialPostsResponse = zod.array(GetSocialPostsResponseItem)
+
+
+/**
  * @summary Get recent activity feed
  */
 export const GetActivityQueryParams = zod.object({

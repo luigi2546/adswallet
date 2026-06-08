@@ -355,6 +355,75 @@ paths:
                 items:
                   $ref: "#/components/schemas/PlatformBreakdown"
 
+  # Social Accounts
+  /social-accounts:
+    get:
+      operationId: getSocialAccounts
+      tags: [platforms]
+      summary: List connected social accounts
+      responses:
+        "200":
+          description: Connected accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SocialAccount"
+    post:
+      operationId: connectSocialAccount
+      tags: [platforms]
+      summary: Connect a social media account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConnectAccountInput"
+      responses:
+        "201":
+          description: Account connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SocialAccount"
+
+  /social-accounts/{id}:
+    delete:
+      operationId: disconnectSocialAccount
+      tags: [platforms]
+      summary: Disconnect a social account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Disconnected
+
+  /social-accounts/{id}/posts:
+    get:
+      operationId: getSocialPosts
+      tags: [platforms]
+      summary: Get recent posts from a connected account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Posts list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SocialPost"
+
   # Activity Feed
   /activity:
     get:
@@ -677,6 +746,71 @@ components:
           type: integer
         clicks:
           type: integer
+
+    SocialAccount:
+      type: object
+      required: [id, platform, accountName, accountHandle, followers, status, connectedAt]
+      properties:
+        id:
+          type: integer
+        platform:
+          type: string
+          enum: [facebook, instagram, tiktok, google, youtube]
+        accountName:
+          type: string
+        accountHandle:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        followers:
+          type: integer
+        status:
+          type: string
+          enum: [connected, expired, error]
+        connectedAt:
+          type: string
+          format: date-time
+
+    ConnectAccountInput:
+      type: object
+      required: [platform, accountName, accountHandle]
+      properties:
+        platform:
+          type: string
+          enum: [facebook, instagram, tiktok, google, youtube]
+        accountName:
+          type: string
+        accountHandle:
+          type: string
+
+    SocialPost:
+      type: object
+      required: [id, socialAccountId, platform, postType, likes, comments, shares, reach, postedAt]
+      properties:
+        id:
+          type: string
+        socialAccountId:
+          type: integer
+        platform:
+          type: string
+        postType:
+          type: string
+          enum: [post, reel, story, video]
+        content:
+          type: ["string", "null"]
+        mediaUrl:
+          type: ["string", "null"]
+        likes:
+          type: integer
+        comments:
+          type: integer
+        shares:
+          type: integer
+        reach:
+          type: integer
+        postedAt:
+          type: string
+          format: date-time
 
     ActivityItem:
       type: object

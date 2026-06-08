@@ -4,6 +4,7 @@ import authRouter from "./auth";
 import walletRouter from "./wallet";
 import campaignsRouter from "./campaigns";
 import analyticsRouter from "./analytics";
+import socialAccountsRouter from "./social-accounts";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(authRouter);
 router.use(walletRouter);
 router.use(campaignsRouter);
 router.use(analyticsRouter);
+router.use(socialAccountsRouter);
 
 export default router;
