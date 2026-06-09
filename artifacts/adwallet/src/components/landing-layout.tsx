@@ -1,9 +1,8 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "./ui/button";
-import { Globe, Share2, Mail } from "lucide-react";
 
 export function LandingLayout({ children }: { children: React.ReactNode }) {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -13,9 +12,18 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
             AdWallet<span className="text-foreground">.</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">How it Works</a>
-            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            <Link href="/features" className={`text-sm font-medium transition-colors ${location === "/features" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              Features
+            </Link>
+            <Link href="/how-it-works" className={`text-sm font-medium transition-colors ${location === "/how-it-works" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              How it Works
+            </Link>
+            <Link href="/pricing" className={`text-sm font-medium transition-colors ${location === "/pricing" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              Pricing
+            </Link>
+            <Link href="/success-stories" className={`text-sm font-medium transition-colors ${location === "/success-stories" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+              Stories
+            </Link>
           </nav>
           <div className="flex items-center gap-4">
             <Button variant="ghost" onClick={() => setLocation("/login")}>Sign In</Button>
@@ -38,39 +46,36 @@ export function LandingLayout({ children }: { children: React.ReactNode }) {
               </p>
             </div>
             <div>
-              <h5 className="text-xs font-bold uppercase tracking-widest text-foreground mb-4">Integration</h5>
+              <h5 className="text-xs font-bold uppercase tracking-widest text-foreground mb-4">Platform</h5>
               <ul className="space-y-2">
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">M-Pesa Integration</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">MTN MoMo</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">Airtel Money</a></li>
+                <li><Link href="/features" className="text-sm text-muted-foreground hover:text-primary transition-colors">Features</Link></li>
+                <li><Link href="/how-it-works" className="text-sm text-muted-foreground hover:text-primary transition-colors">How it Works</Link></li>
+                <li><Link href="/pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
+                <li><Link href="/success-stories" className="text-sm text-muted-foreground hover:text-primary transition-colors">Success Stories</Link></li>
               </ul>
             </div>
             <div>
               <h5 className="text-xs font-bold uppercase tracking-widest text-foreground mb-4">Legal</h5>
               <ul className="space-y-2">
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">KYC Policy</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">Privacy Policy</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">Terms of Service</a></li>
+                <li><Link href="/kyc" className="text-sm text-muted-foreground hover:text-primary transition-colors">KYC Policy</Link></li>
+                <li><Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
             <div>
-              <h5 className="text-xs font-bold uppercase tracking-widest text-foreground mb-4">Resources</h5>
+              <h5 className="text-xs font-bold uppercase tracking-widest text-foreground mb-4">Support</h5>
               <ul className="space-y-2">
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">API Docs</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">Help Center</a></li>
-                <li><a className="text-sm text-muted-foreground hover:text-primary transition-colors" href="#">Success Stories</a></li>
+                <li><Link href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">Help Center</Link></li>
+                <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Contact Us</Link></li>
+                <li><Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">Book a Demo</Link></li>
               </ul>
             </div>
           </div>
           <div className="pt-8 border-t border-border/30 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} AdWallet Africa. Precision Fintech for the Pan-African Market.
+              &copy; {new Date().getFullYear()} AdWallet Africa. Precision Fintech for the Pan-African Market.
             </p>
-            <div className="flex gap-4">
-              <Globe className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
-              <Share2 className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
-              <Mail className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
-            </div>
+            <p className="text-xs text-muted-foreground">hello@adwallet.africa</p>
           </div>
         </div>
       </footer>

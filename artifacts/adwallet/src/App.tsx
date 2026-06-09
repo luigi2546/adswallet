@@ -18,6 +18,15 @@ import CampaignDetail from "./pages/campaigns/detail";
 import AnalyticsPage from "./pages/analytics";
 import SettingsPage from "./pages/settings";
 import BoostPage from "./pages/boost";
+import FeaturesPage from "./pages/features";
+import HowItWorksPage from "./pages/how-it-works";
+import PricingPage from "./pages/pricing";
+import ContactPage from "./pages/contact";
+import PrivacyPage from "./pages/privacy";
+import TermsPage from "./pages/terms";
+import KYCPage from "./pages/kyc";
+import HelpPage from "./pages/help";
+import SuccessStoriesPage from "./pages/success-stories";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +60,37 @@ function Router() {
       <Route path="/register">
         <LandingLayout><Register /></LandingLayout>
       </Route>
+
+      {/* Public content pages */}
+      <Route path="/features">
+        <LandingLayout><FeaturesPage /></LandingLayout>
+      </Route>
+      <Route path="/how-it-works">
+        <LandingLayout><HowItWorksPage /></LandingLayout>
+      </Route>
+      <Route path="/pricing">
+        <LandingLayout><PricingPage /></LandingLayout>
+      </Route>
+      <Route path="/contact">
+        <LandingLayout><ContactPage /></LandingLayout>
+      </Route>
+      <Route path="/privacy">
+        <LandingLayout><PrivacyPage /></LandingLayout>
+      </Route>
+      <Route path="/terms">
+        <LandingLayout><TermsPage /></LandingLayout>
+      </Route>
+      <Route path="/kyc">
+        <LandingLayout><KYCPage /></LandingLayout>
+      </Route>
+      <Route path="/help">
+        <LandingLayout><HelpPage /></LandingLayout>
+      </Route>
+      <Route path="/success-stories">
+        <LandingLayout><SuccessStoriesPage /></LandingLayout>
+      </Route>
+
+      {/* Protected app routes */}
       <Route path="/dashboard"><ProtectedRoute component={Dashboard} /></Route>
       <Route path="/wallet"><ProtectedRoute component={WalletPage} /></Route>
       <Route path="/campaigns"><ProtectedRoute component={CampaignsPage} /></Route>
@@ -59,6 +99,7 @@ function Router() {
       <Route path="/boost"><ProtectedRoute component={BoostPage} /></Route>
       <Route path="/analytics"><ProtectedRoute component={AnalyticsPage} /></Route>
       <Route path="/settings"><ProtectedRoute component={SettingsPage} /></Route>
+
       <Route component={NotFound} />
     </Switch>
   );
