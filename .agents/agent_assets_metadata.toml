@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "B484jl-OIcpydYBSgh4M3"
+uri = "file://OAUTH_SETUP.md"
+type = "text"
+title = "OAuth Platform Integration Setup Guide"

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, socialAccountsTable } from "@workspace/db";
+import { db, socialAccountsTable, oauthTokensTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { z } from "zod";
@@ -179,8 +179,142 @@ router.get("/social-accounts/:id/posts", requireAuth, async (req, res) => {
     return;
   }
 
+  // Try to use real OAuth token if available and not expired
+  const [token] = await db.select().from(oauthTokensTable).where(
+    and(eq(oauthTokensTable.userId, userId), eq(oauthTokensTable.platform, account.platform))
+  ).limit(1);
+
+  const hasValidToken = token && (!token.expiresAt || token.expiresAt > new Date());
+
+  if (hasValidToken) {
+    try {
+      const realPosts = await fetchRealPosts(account.platform, token.accessToken, account);
+      if (realPosts && realPosts.length > 0) {
+        res.json(realPosts);
+        return;
+      }
+    } catch (err) {
+      req.log?.warn({ err, platform: account.platform }, "Real posts fetch failed, falling back to mock");
+    }
+  }
+
   const posts = generateMockPosts(account);
   res.json(posts);
 });
+
+async function fetchRealPosts(
+  platform: string,
+  accessToken: string,
+  account: { id: number; platform: string; accountName: string; accountHandle: string; followers: number }
+): Promise<object[] | null> {
+  const base = { socialAccountId: account.id, platform };
+
+  if (platform === "facebook") {
+    const res = await fetch(
+      `https://graph.facebook.com/v19.0/me/posts?fields=id,message,created_time,likes.summary(true),comments.summary(true),shares&limit=6&access_token=${accessToken}`
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as any;
+    return (data.data ?? []).map((p: any, i: number) => ({
+      id: `fb-${p.id}`,
+      ...base,
+      postType: "post",
+      content: p.message ?? "(No caption)",
+      mediaUrl: null,
+      likes: p.likes?.summary?.total_count ?? 0,
+      comments: p.comments?.summary?.total_count ?? 0,
+      shares: p.shares?.count ?? 0,
+      reach: Math.floor((p.likes?.summary?.total_count ?? 0) * 4.2),
+      postedAt: p.created_time,
+    }));
+  }
+
+  if (platform === "instagram") {
+    const meRes = await fetch(
+      `https://graph.facebook.com/v19.0/me/accounts?fields=instagram_business_account{id}&access_token=${accessToken}`
+    );
+    if (!meRes.ok) return null;
+    const pages = ((await meRes.json()) as any).data ?? [];
+    const igId = pages[0]?.instagram_business_account?.id;
+    if (!igId) return null;
+
+    const mediaRes = await fetch(
+      `https://graph.facebook.com/v19.0/${igId}/media?fields=id,caption,media_type,timestamp,like_count,comments_count&limit=6&access_token=${accessToken}`
+    );
+    if (!mediaRes.ok) return null;
+    const media = ((await mediaRes.json()) as any).data ?? [];
+    return media.map((m: any) => ({
+      id: `ig-${m.id}`,
+      ...base,
+      postType: m.media_type === "VIDEO" ? "reel" : "post",
+      content: m.caption ?? "(No caption)",
+      mediaUrl: null,
+      likes: m.like_count ?? 0,
+      comments: m.comments_count ?? 0,
+      shares: 0,
+      reach: Math.floor((m.like_count ?? 0) * 5.1),
+      postedAt: m.timestamp,
+    }));
+  }
+
+  if (platform === "youtube") {
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&forMine=true&type=video&maxResults=6`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as any;
+    const ids = (data.items ?? []).map((i: any) => i.id?.videoId).filter(Boolean).join(",");
+    if (!ids) return [];
+
+    const statsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } }
+    );
+    const stats = statsRes.ok ? ((await statsRes.json()) as any).items ?? [] : [];
+    const statsMap: Record<string, any> = {};
+    stats.forEach((s: any) => { statsMap[s.id] = s.statistics; });
+
+    return (data.items ?? []).map((item: any) => {
+      const vid = item.id?.videoId;
+      const s = statsMap[vid] ?? {};
+      return {
+        id: `yt-${vid}`,
+        ...base,
+        postType: "video",
+        content: item.snippet?.title ?? "(No title)",
+        mediaUrl: item.snippet?.thumbnails?.default?.url ?? null,
+        likes: parseInt(s.likeCount ?? "0", 10),
+        comments: parseInt(s.commentCount ?? "0", 10),
+        shares: 0,
+        reach: parseInt(s.viewCount ?? "0", 10),
+        postedAt: item.snippet?.publishedAt ?? new Date().toISOString(),
+      };
+    });
+  }
+
+  if (platform === "tiktok") {
+    const res = await fetch(
+      "https://open.tiktokapis.com/v2/video/list/?fields=id,title,video_description,create_time,like_count,comment_count,share_count,view_count",
+      { method: "POST", headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ max_count: 6 }) }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as any;
+    return (data.data?.videos ?? []).map((v: any) => ({
+      id: `tt-${v.id}`,
+      ...base,
+      postType: "video",
+      content: v.video_description ?? v.title ?? "(No caption)",
+      mediaUrl: null,
+      likes: v.like_count ?? 0,
+      comments: v.comment_count ?? 0,
+      shares: v.share_count ?? 0,
+      reach: v.view_count ?? 0,
+      postedAt: new Date((v.create_time ?? 0) * 1000).toISOString(),
+    }));
+  }
+
+  return null;
+}
 
 export default router;
