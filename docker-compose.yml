@@ -1,0 +1,12 @@
+services:
+  adwallet:
+    build: .
+    ports:
+      - "5173:5173"
+    environment:
+      - PORT=5173
+      - BASE_PATH=/
+      - NODE_ENV=development
+    volumes:
+      - ./artifacts/adwallet/src:/app/artifacts/adwallet/src
+      - ./lib:/app/lib
