@@ -20,6 +20,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Heart, MessageCircle, Share2, Eye,
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/components/currency-context";
 
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   facebook: <SiFacebook className="w-5 h-5 text-[#1877F2]" />,
@@ -50,6 +51,7 @@ export default function BoostPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { currency, formatCurrency } = useCurrency();
 
   const { data: accounts, isLoading: isLoadingAccounts } = useGetSocialAccounts();
   const { data: posts, isLoading: isLoadingPosts } = useGetSocialPosts(
@@ -232,7 +234,7 @@ export default function BoostPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="p-3 bg-muted/40 rounded-lg text-sm text-muted-foreground">
-              1 GHS = 1 Ad Credit. Credits are deducted from your wallet when the campaign launches.
+              1 {currency} = 1 Ad Credit. Credits are deducted from your wallet when the campaign launches.
             </div>
             <div>
               <Label>Campaign Objective</Label>
@@ -247,17 +249,17 @@ export default function BoostPage() {
               </div>
             </div>
             <div>
-              <Label htmlFor="daily">Daily Budget (GHS)</Label>
+              <Label htmlFor="daily">Daily Budget ({currency})</Label>
               <Input id="daily" type="number" min="1" value={dailyBudget} onChange={e => setDailyBudget(e.target.value)} className="mt-1.5" data-testid="input-boost-daily" />
             </div>
             <div>
-              <Label htmlFor="total">Total Budget (GHS)</Label>
+              <Label htmlFor="total">Total Budget ({currency})</Label>
               <Input id="total" type="number" min="1" value={totalBudget} onChange={e => setTotalBudget(e.target.value)} className="mt-1.5" data-testid="input-boost-total" />
             </div>
             {duration && (
               <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
                 <span className="font-medium text-foreground">Estimated duration: </span>
-                <span className="text-muted-foreground">~{duration} days at GHS {dailyBudget}/day</span>
+                <span className="text-muted-foreground">~{duration} days at {currency} {dailyBudget}/day</span>
               </div>
             )}
           </CardContent>
@@ -287,8 +289,8 @@ export default function BoostPage() {
             {[
               { label: "Platform", value: selectedAccount.platform },
               { label: "Objective", value: objective },
-              { label: "Daily Budget", value: `GHS ${dailyBudget}` },
-              { label: "Total Budget", value: `GHS ${totalBudget}` },
+              { label: "Daily Budget", value: `${currency} ${dailyBudget}` },
+              { label: "Total Budget", value: `${currency} ${totalBudget}` },
               { label: "Duration", value: duration ? `~${duration} days` : "—" },
             ].map(({ label, value }) => (
               <div key={label} className="flex justify-between py-1.5 border-b border-border last:border-0">

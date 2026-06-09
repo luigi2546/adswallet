@@ -10,6 +10,7 @@ import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-ic
 import { format } from "date-fns";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/components/currency-context";
 
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   facebook: <SiFacebook className="w-6 h-6 text-[#1877F2]" />,
@@ -46,6 +47,7 @@ export default function CampaignDetail() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const { data: campaign, isLoading } = useGetCampaign(campaignId, {
     query: { enabled: !!campaignId, queryKey: getGetCampaignQueryKey(campaignId) }
@@ -199,8 +201,8 @@ export default function CampaignDetail() {
             {[
               { label: "Platform", value: campaign.platform },
               { label: "Objective", value: campaign.objective },
-              { label: "Daily Budget", value: `GHS ${campaign.dailyBudget.toFixed(2)}` },
-              { label: "Total Budget", value: `GHS ${campaign.totalBudget.toFixed(2)}` },
+              { label: "Daily Budget", value: `${formatCurrency(campaign.dailyBudget, { showCode: true })}` },
+              { label: "Total Budget", value: `${formatCurrency(campaign.totalBudget, { showCode: true })}` },
               { label: "Credits Used", value: `${campaign.creditsUsed.toFixed(2)} Credits` },
               { label: "Created", value: format(new Date(campaign.createdAt), "MMM d, yyyy") },
               { label: "Launched", value: campaign.launchedAt ? format(new Date(campaign.launchedAt), "MMM d, yyyy") : "—" },

@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Wallet, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/components/currency-context";
 
 export default function WalletPage() {
   const [isDepositOpen, setIsDepositOpen] = useState(false);
@@ -25,6 +26,7 @@ export default function WalletPage() {
   const depositMutation = useDepositFunds();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { formatCurrency, currency, currencySymbol } = useCurrency();
 
   const handleDeposit = () => {
     if (!amount || isNaN(Number(amount))) return;
@@ -74,7 +76,7 @@ export default function WalletPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Amount (USD)</Label>
+                <Label>Amount ({currency})</Label>
                 <Input type="number" placeholder="100" value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
               <div className="space-y-2">
@@ -126,9 +128,9 @@ export default function WalletPage() {
           <CardContent>
             <div className="text-4xl font-bold flex items-center gap-2">
               <Wallet className="w-8 h-8 opacity-80" />
-              ${wallet?.creditBalance?.toFixed(2) || "0.00"}
+              {formatCurrency(wallet?.creditBalance ?? 0)}
             </div>
-            <p className="mt-4 text-sm opacity-80">1 Credit = $1.00 USD</p>
+            <p className="mt-4 text-sm opacity-80">1 Credit = {currencySymbol}1.00 {currency}</p>
           </CardContent>
         </Card>
         
@@ -139,12 +141,12 @@ export default function WalletPage() {
           <CardContent className="flex h-[calc(100%-3rem)] items-center justify-around">
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-1">Total Deposited</p>
-              <p className="text-2xl font-bold text-foreground">${wallet?.totalDeposited?.toFixed(2) || "0.00"}</p>
+              <p className="text-2xl font-bold text-foreground">{formatCurrency(wallet?.totalDeposited ?? 0)}</p>
             </div>
             <div className="h-12 w-px bg-border" />
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-1">Total Spent</p>
-              <p className="text-2xl font-bold text-foreground">${wallet?.totalSpent?.toFixed(2) || "0.00"}</p>
+              <p className="text-2xl font-bold text-foreground">{formatCurrency(wallet?.totalSpent ?? 0)}</p>
             </div>
           </CardContent>
         </Card>
@@ -193,7 +195,7 @@ export default function WalletPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right font-medium">
-                      {tx.type === 'deposit' ? '+' : '-'}${tx.amount.toFixed(2)}
+                      {tx.type === 'deposit' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </TableCell>
                   </TableRow>
                 ))

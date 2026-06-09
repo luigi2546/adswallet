@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, CheckCircle2, Megaphone } from "lucide-react";
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/components/currency-context";
 
 const PLATFORMS = [
   { id: "facebook", label: "Facebook", icon: <SiFacebook className="w-7 h-7 text-[#1877F2]" />, color: "#1877F2" },
@@ -45,6 +46,7 @@ interface FormData {
 
 export default function NewCampaignPage() {
   const [step, setStep] = useState(0);
+  const { currency, currencySymbol, formatCurrency } = useCurrency();
   const [form, setForm] = useState<FormData>({
     platform: "",
     objective: "",
@@ -209,21 +211,21 @@ export default function NewCampaignPage() {
           {step === 3 && (
             <div className="space-y-4">
               <div className="p-3 bg-muted/40 rounded-lg text-sm text-muted-foreground">
-                Credits are deducted from your wallet when the campaign launches. 1 GHS = 1 Ad Credit.
+                Credits are deducted from your wallet when the campaign launches. 1 {currency} = 1 Ad Credit.
               </div>
               <div>
-                <Label htmlFor="daily-budget">Daily Budget (GHS)</Label>
+                <Label htmlFor="daily-budget">Daily Budget ({currency})</Label>
                 <Input id="daily-budget" type="number" min="1" placeholder="25" value={form.dailyBudget} onChange={e => update("dailyBudget", e.target.value)} data-testid="input-daily-budget" className="mt-1.5" />
               </div>
               <div>
-                <Label htmlFor="total-budget">Total Budget (GHS)</Label>
+                <Label htmlFor="total-budget">Total Budget ({currency})</Label>
                 <Input id="total-budget" type="number" min="1" placeholder="175" value={form.totalBudget} onChange={e => update("totalBudget", e.target.value)} data-testid="input-total-budget" className="mt-1.5" />
               </div>
               {form.dailyBudget && form.totalBudget && (
                 <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
                   <span className="text-foreground font-medium">Estimated duration: </span>
                   <span className="text-muted-foreground">
-                    ~{Math.ceil(Number(form.totalBudget) / Number(form.dailyBudget))} days at GHS {form.dailyBudget}/day
+                    ~{Math.ceil(Number(form.totalBudget) / Number(form.dailyBudget))} days at {currency} {form.dailyBudget}/day
                   </span>
                 </div>
               )}
@@ -258,8 +260,8 @@ export default function NewCampaignPage() {
                 { label: "Location", value: form.targetLocation },
                 { label: "Age Range", value: form.targetAge },
                 { label: "Gender", value: form.targetGender },
-                { label: "Daily Budget", value: `GHS ${form.dailyBudget}` },
-                { label: "Total Budget", value: `GHS ${form.totalBudget}` },
+                { label: "Daily Budget", value: `${currency} ${form.dailyBudget}` },
+                { label: "Total Budget", value: `${currency} ${form.totalBudget}` },
                 { label: "Campaign Name", value: form.name },
                 { label: "Headline", value: form.headline },
                 { label: "Description", value: form.description || "—" },

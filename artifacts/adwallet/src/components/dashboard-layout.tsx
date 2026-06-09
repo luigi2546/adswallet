@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "./auth-context";
+import { useCurrency } from "./currency-context";
 import { 
   LayoutDashboard, 
   WalletCards, 
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { country, currency, currencySymbol } = useCurrency();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -78,7 +80,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">{user?.name}</div>
-              <div className="text-xs text-muted-foreground truncate">{user?.email}</div>
+              <div className="text-xs text-muted-foreground truncate">{country.flag} {currency}</div>
             </div>
           </div>
           <Button 

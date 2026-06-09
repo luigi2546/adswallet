@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "./components/auth-context";
+import { CurrencyProvider } from "./components/currency-context";
 import { LandingLayout } from "./components/landing-layout";
 import { DashboardLayout } from "./components/dashboard-layout";
 
@@ -111,7 +112,9 @@ function App() {
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <AuthProvider>
-            <Router />
+            <CurrencyProvider>
+              <Router />
+            </CurrencyProvider>
           </AuthProvider>
         </WouterRouter>
         <Toaster />

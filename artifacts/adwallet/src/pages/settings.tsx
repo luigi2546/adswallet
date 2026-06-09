@@ -14,10 +14,13 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Bell, Shield, Moon, Sun, LogOut, Link2, Trash2, CheckCircle2, ExternalLink, RefreshCw } from "lucide-react";
+import { User, Bell, Shield, Moon, Sun, LogOut, Link2, Trash2, CheckCircle2, ExternalLink, RefreshCw, Globe } from "lucide-react";
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { useCurrency } from "@/components/currency-context";
+import { AFRICAN_COUNTRIES, getCountryByCode } from "@/lib/countries";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -77,6 +80,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
+  const { countryCode, country, currency, currencySymbol, setCountry } = useCurrency();
 
   const [name, setName] = useState(user?.name ?? "");
   const [businessName, setBusinessName] = useState(user?.businessName ?? "");
@@ -199,6 +203,56 @@ export default function SettingsPage() {
             <Input id="business-name" placeholder="Your company or brand name" value={businessName} onChange={e => setBusinessName(e.target.value)} className="mt-1.5" data-testid="input-business-name" />
           </div>
           <Button onClick={handleSaveProfile} data-testid="button-save-profile">Save Changes</Button>
+        </CardContent>
+      </Card>
+
+      {/* Country & Currency */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Globe className="w-5 h-5 text-primary" />
+            Country & Currency
+          </CardTitle>
+          <CardDescription>
+            Select your country to set your wallet currency. All amounts across the app will reflect this.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Country</Label>
+            <Select value={countryCode} onValueChange={(v) => {
+              setCountry(v);
+              const c = getCountryByCode(v);
+              toast({
+                title: "Country updated",
+                description: c ? `Currency set to ${c.currency} (${c.currencySymbol})` : "Country updated",
+              });
+            }}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {AFRICAN_COUNTRIES.map(c => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.flag} {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+            <div className="w-2 h-2 rounded-full bg-primary" />
+            <span>
+              Your wallet currency is{" "}
+              <strong>{currency}</strong>{" "}
+              <span className="text-muted-foreground">({currencySymbol} — {country.name})</span>
+            </span>
+          </div>
+          {country.mobileMoneyProvider && (
+            <div className="px-3 py-2 bg-muted/40 rounded-lg text-xs text-muted-foreground">
+              Supported mobile money: {country.mobileMoneyProvider}
+            </div>
+          )}
         </CardContent>
       </Card>
 

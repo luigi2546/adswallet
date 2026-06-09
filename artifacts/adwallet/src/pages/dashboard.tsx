@@ -3,10 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Wallet, Megaphone, CheckCircle2, FileEdit, TrendingUp, MousePointerClick, BarChart3, Activity } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
+import { useCurrency } from "@/components/currency-context";
 
 export default function Dashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetDashboardSummary();
   const { data: activities, isLoading: isLoadingActivities } = useGetActivity({ limit: 5 });
+  const { formatCurrency, currency } = useCurrency();
 
   if (isLoadingSummary) {
     return (
@@ -34,8 +36,8 @@ export default function Dashboard() {
             <Wallet className="w-4 h-4 opacity-80" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">${summary?.creditBalance?.toFixed(2) || "0.00"}</div>
-            <p className="text-xs opacity-80 mt-1">Total deposited: ${summary?.totalDeposited?.toFixed(2) || "0.00"}</p>
+            <div className="text-3xl font-bold">{formatCurrency(summary?.creditBalance ?? 0)}</div>
+            <p className="text-xs opacity-80 mt-1">Total deposited: {formatCurrency(summary?.totalDeposited ?? 0)}</p>
           </CardContent>
         </Card>
         
@@ -79,7 +81,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-foreground">{summary?.totalConversions?.toLocaleString() || 0}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center justify-between">
               <span>CTR: {summary?.averageCtr?.toFixed(2) || "0.00"}%</span>
-              <span>CPC: ${summary?.averageCpc?.toFixed(2) || "0.00"}</span>
+              <span>CPC: {formatCurrency(summary?.averageCpc ?? 0)}</span>
             </p>
           </CardContent>
         </Card>
@@ -111,11 +113,11 @@ export default function Dashboard() {
                       <p className="text-sm text-muted-foreground">{item.description}</p>
                       <p className="text-xs text-muted-foreground mt-1">{format(new Date(item.createdAt), "MMM d, h:mm a")}</p>
                     </div>
-                    {item.amount && (
-                      <div className="ml-auto font-medium text-sm">
-                        {item.type === 'deposit' ? '+' : '-'}${Math.abs(item.amount).toFixed(2)}
-                      </div>
-                    )}
+                      {item.amount && (
+                        <div className="ml-auto font-medium text-sm">
+                          {item.type === 'deposit' ? '+' : '-'}{formatCurrency(Math.abs(item.amount))}
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>

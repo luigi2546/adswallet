@@ -11,6 +11,7 @@ import { Plus, Megaphone, Play, Pause, Trash2, ExternalLink, Zap } from "lucide-
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/components/currency-context";
 
 const PLATFORM_ICONS: Record<string, React.ReactNode> = {
   facebook: <SiFacebook className="text-[#1877F2]" />,
@@ -31,6 +32,7 @@ export default function CampaignsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { formatCurrency, currency } = useCurrency();
 
   const params = statusFilter !== "all" ? { status: statusFilter } : undefined;
   const { data: campaigns, isLoading } = useGetCampaigns(params, {
@@ -146,7 +148,7 @@ export default function CampaignsPage() {
                       <span className="text-xs text-muted-foreground capitalize">{campaign.platform} · {campaign.objective}</span>
                     </div>
                     <div className="flex gap-6 mt-2 text-sm text-muted-foreground flex-wrap">
-                      <span>Budget: <span className="text-foreground font-medium">GHS {campaign.totalBudget.toFixed(2)}</span></span>
+                      <span>Budget: <span className="text-foreground font-medium">{formatCurrency(campaign.totalBudget, { showCode: true })}</span></span>
                       {campaign.impressions != null && (
                         <span>Impressions: <span className="text-foreground font-medium">{campaign.impressions.toLocaleString()}</span></span>
                       )}

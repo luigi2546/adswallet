@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { AFRICAN_COUNTRIES, getCountryByCode } from "@/lib/countries";
+import { useCurrency } from "@/components/currency-context";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -25,6 +26,7 @@ export default function Register() {
   const { login } = useAuth();
   const { toast } = useToast();
   const registerMutation = useRegister();
+  const { setCountry } = useCurrency();
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -46,6 +48,7 @@ export default function Register() {
       {
         onSuccess: (data) => {
           login(data.token);
+          if (values.country) setCountry(values.country);
           toast({ title: "Account created", description: "Welcome to AdWallet Africa!" });
           setLocation("/dashboard");
         },

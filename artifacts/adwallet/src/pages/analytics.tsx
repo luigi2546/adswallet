@@ -9,6 +9,7 @@ import {
 } from "recharts";
 import { TrendingUp, MousePointerClick, Eye, CheckCircle2, DollarSign } from "lucide-react";
 import { SiFacebook, SiInstagram, SiTiktok, SiGoogle, SiYoutube } from "react-icons/si";
+import { useCurrency } from "@/components/currency-context";
 
 const RANGE_OPTIONS = [
   { label: "7 days", value: "7d" },
@@ -34,6 +35,7 @@ const PLATFORM_ICONS: Record<string, React.ReactNode> = {
 
 export default function AnalyticsPage() {
   const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
+  const { currency, formatCurrency } = useCurrency();
 
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
   const { data: performance, isLoading: isPerfLoading } = useGetPerformanceMetrics(
@@ -43,12 +45,12 @@ export default function AnalyticsPage() {
   const { data: breakdown, isLoading: isBreakdownLoading } = useGetPlatformBreakdown();
 
   const kpiCards = [
-    { label: "Total Spend", value: `GHS ${summary?.totalSpent?.toFixed(2) ?? "0.00"}`, icon: <DollarSign className="w-4 h-4" />, color: "text-primary" },
+    { label: "Total Spend", value: formatCurrency(summary?.totalSpent ?? 0, { showCode: true }), icon: <DollarSign className="w-4 h-4" />, color: "text-primary" },
     { label: "Total Impressions", value: (summary?.totalImpressions ?? 0).toLocaleString(), icon: <Eye className="w-4 h-4" />, color: "text-blue-500" },
     { label: "Total Clicks", value: (summary?.totalClicks ?? 0).toLocaleString(), icon: <MousePointerClick className="w-4 h-4" />, color: "text-emerald-500" },
     { label: "Conversions", value: (summary?.totalConversions ?? 0).toLocaleString(), icon: <CheckCircle2 className="w-4 h-4" />, color: "text-amber-500" },
     { label: "Average CTR", value: `${summary?.averageCtr?.toFixed(2) ?? "0.00"}%`, icon: <TrendingUp className="w-4 h-4" />, color: "text-purple-500" },
-    { label: "Avg. CPC", value: `GHS ${summary?.averageCpc?.toFixed(2) ?? "0.00"}`, icon: <DollarSign className="w-4 h-4" />, color: "text-rose-500" },
+    { label: "Avg. CPC", value: formatCurrency(summary?.averageCpc ?? 0, { showCode: true }), icon: <DollarSign className="w-4 h-4" />, color: "text-rose-500" },
   ];
 
   return (
@@ -120,7 +122,7 @@ export default function AnalyticsPage() {
                     labelStyle={{ color: "hsl(var(--foreground))" }}
                   />
                   <Legend wrapperStyle={{ fontSize: "12px" }} />
-                  <Area type="monotone" dataKey="spend" name="Spend (GHS)" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorSpend)" />
+                  <Area type="monotone" dataKey="spend" name={`Spend (${currency})`} stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#colorSpend)" />
                   <Area type="monotone" dataKey="clicks" name="Clicks" stroke="hsl(var(--chart-2))" strokeWidth={2} fill="url(#colorClicks2)" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -152,7 +154,7 @@ export default function AnalyticsPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                      formatter={(value: any) => [`GHS ${Number(value).toFixed(2)}`, "Spend"]}
+                      formatter={(value: any) => [`${currency} ${Number(value).toFixed(2)}`, "Spend"]}
                     />
                     <Legend wrapperStyle={{ fontSize: "12px" }} />
                   </PieChart>
@@ -193,7 +195,7 @@ export default function AnalyticsPage() {
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
                         <span>{p.clicks.toLocaleString()} clicks</span>
-                        <span>GHS {p.spend.toFixed(2)} spent</span>
+                        <span>{currency} {p.spend.toFixed(2)} spent</span>
                       </div>
                     </div>
                   </div>
