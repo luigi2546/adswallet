@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { db, usersTable, walletsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { hashPassword, generateToken, requireAuth } from "../lib/auth";
+import { requireAuth } from "../lib/auth";
 import { RegisterBody, LoginBody } from "@workspace/api-zod";
+import { supabase } from "../lib/supabase.service";
 
 const router = Router();
 
@@ -30,41 +31,74 @@ router.post("/auth/register", async (req, res) => {
   const countryCode = typeof req.body.country === "string" ? req.body.country.toUpperCase() : "";
   const currency = COUNTRY_CURRENCY[countryCode] ?? "GHS";
 
-  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-  if (existing.length > 0) {
-    res.status(409).json({ error: "Email already registered" });
-    return;
+  try {
+    // 1. Check local DB if email is already taken
+    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+    if (existing.length > 0) {
+      res.status(409).json({ error: "Email already registered" });
+      return;
+    }
+
+    // 2. Register user in Supabase via Admin Client
+    const { data: createData, error: createError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true, // Auto-confirm email to bypass email verification in dev
+      user_metadata: { name, businessName, country: countryCode },
+    });
+
+    if (createError || !createData.user) {
+      res.status(400).json({ error: createError?.message || "Failed to register user in Supabase" });
+      return;
+    }
+
+    const supabaseUser = createData.user;
+
+    // 3. Create user in local PostgreSQL
+    const [user] = await db.insert(usersTable).values({
+      name,
+      email,
+      supabaseUid: supabaseUser.id,
+      businessName: businessName ?? null,
+      role: "user",
+    }).returning();
+
+    // 4. Create local wallet
+    await db.insert(walletsTable).values({
+      userId: user.id,
+      creditBalance: "0",
+      totalDeposited: "0",
+      totalSpent: "0",
+      currency,
+    });
+
+    // 5. Sign in newly registered user via Supabase SDK to get JWT access token
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError || !authData.session) {
+      res.status(400).json({ error: authError?.message || "Registered successfully, but failed to log in automatically" });
+      return;
+    }
+
+    res.status(201).json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        businessName: user.businessName ?? null,
+        avatarUrl: user.avatarUrl ?? null,
+        createdAt: user.createdAt.toISOString(),
+      },
+      token: authData.session.access_token,
+    });
+  } catch (err: any) {
+    req.log?.error({ err }, "Registration error");
+    res.status(500).json({ error: "Internal server error during registration" });
   }
-
-  const [user] = await db.insert(usersTable).values({
-    name,
-    email,
-    passwordHash: hashPassword(password),
-    businessName: businessName ?? null,
-    role: "user",
-  }).returning();
-
-  await db.insert(walletsTable).values({
-    userId: user.id,
-    creditBalance: "0",
-    totalDeposited: "0",
-    totalSpent: "0",
-    currency,
-  });
-
-  const token = generateToken(user.id);
-  res.status(201).json({
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      businessName: user.businessName ?? null,
-      avatarUrl: user.avatarUrl ?? null,
-      createdAt: user.createdAt.toISOString(),
-    },
-    token,
-  });
 });
 
 router.post("/auth/login", async (req, res) => {
@@ -75,25 +109,65 @@ router.post("/auth/login", async (req, res) => {
   }
   const { email, password } = parsed.data;
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-  if (!user || user.passwordHash !== hashPassword(password)) {
-    res.status(401).json({ error: "Invalid credentials" });
-    return;
-  }
+  try {
+    // 1. Authenticate with Supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  const token = generateToken(user.id);
-  res.json({
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      businessName: user.businessName ?? null,
-      avatarUrl: user.avatarUrl ?? null,
-      createdAt: user.createdAt.toISOString(),
-    },
-    token,
-  });
+    if (authError || !authData.session) {
+      res.status(401).json({ error: authError?.message || "Invalid credentials" });
+      return;
+    }
+
+    const supabaseUser = authData.user;
+
+    // 2. Fetch local user
+    let [user] = await db.select().from(usersTable).where(eq(usersTable.supabaseUid, supabaseUser.id)).limit(1);
+
+    // 3. Lazy provision if user exists in Supabase but profile is missing locally
+    if (!user) {
+      const name = supabaseUser.user_metadata?.name || email.split("@")[0] || "User";
+      const businessName = supabaseUser.user_metadata?.businessName || null;
+      const country = supabaseUser.user_metadata?.country || "GH";
+      const currency = COUNTRY_CURRENCY[country.toUpperCase()] ?? "GHS";
+
+      const [newUser] = await db.insert(usersTable).values({
+        name,
+        email,
+        supabaseUid: supabaseUser.id,
+        businessName,
+        role: "user",
+      }).returning();
+
+      user = newUser;
+
+      await db.insert(walletsTable).values({
+        userId: user.id,
+        creditBalance: "0",
+        totalDeposited: "0",
+        totalSpent: "0",
+        currency,
+      });
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        businessName: user.businessName ?? null,
+        avatarUrl: user.avatarUrl ?? null,
+        createdAt: user.createdAt.toISOString(),
+      },
+      token: authData.session.access_token,
+    });
+  } catch (err: any) {
+    req.log?.error({ err }, "Login error");
+    res.status(500).json({ error: "Internal server error during login" });
+  }
 });
 
 router.get("/auth/me", requireAuth, async (req, res) => {
@@ -110,7 +184,12 @@ router.get("/auth/me", requireAuth, async (req, res) => {
 });
 
 router.post("/auth/logout", requireAuth, async (_req, res) => {
-  res.json({ message: "Logged out successfully" });
+  try {
+    await supabase.auth.signOut();
+    res.json({ message: "Logged out successfully" });
+  } catch {
+    res.json({ message: "Logged out locally" });
+  }
 });
 
 export default router;

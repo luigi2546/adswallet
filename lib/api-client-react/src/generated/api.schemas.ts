@@ -376,6 +376,168 @@ export interface ActivityItem {
   createdAt: string;
 }
 
+export type KoraDepositInputCurrency = typeof KoraDepositInputCurrency[keyof typeof KoraDepositInputCurrency];
+
+
+export const KoraDepositInputCurrency = {
+  GHS: 'GHS',
+  NGN: 'NGN',
+  KES: 'KES',
+} as const;
+
+export type KoraDepositInputPaymentMethod = typeof KoraDepositInputPaymentMethod[keyof typeof KoraDepositInputPaymentMethod];
+
+
+export const KoraDepositInputPaymentMethod = {
+  mobile_money: 'mobile_money',
+  bank_transfer: 'bank_transfer',
+  card: 'card',
+} as const;
+
+export interface KoraDepositInput {
+  /** @minimum 0.01 */
+  amount: number;
+  currency: KoraDepositInputCurrency;
+  paymentMethod: KoraDepositInputPaymentMethod;
+  provider?: string;
+  phone?: string;
+  email?: string;
+}
+
+export interface KoraDepositResponse {
+  id: number;
+  reference: string;
+  /** @nullable */
+  authorizationUrl?: string | null;
+  status: string;
+  amount: number;
+  currency: string;
+}
+
+export interface KoraDepositDetails {
+  id: number;
+  reference: string;
+  status: string;
+  amountLocal: number;
+  localCurrency: string;
+  /** @nullable */
+  amountUsd?: number | null;
+  /** @nullable */
+  exchangeRate?: number | null;
+  fee: number;
+  adwalletFee: number;
+  paymentMethod: string;
+  /** @nullable */
+  provider?: string | null;
+  createdAt: string;
+}
+
+export interface KoraDepositsListResponse {
+  deposits: KoraDepositDetails[];
+  total: number;
+  page: number;
+}
+
+export type KoraCardInputPurpose = typeof KoraCardInputPurpose[keyof typeof KoraCardInputPurpose];
+
+
+export const KoraCardInputPurpose = {
+  facebook_ads: 'facebook_ads',
+  instagram_ads: 'instagram_ads',
+  tiktok_ads: 'tiktok_ads',
+  google_ads: 'google_ads',
+  youtube_ads: 'youtube_ads',
+  general: 'general',
+} as const;
+
+export interface KoraCardInput {
+  /** @minimum 1 */
+  amountUsd: number;
+  spendingLimit?: number;
+  purpose?: KoraCardInputPurpose;
+}
+
+export interface KoraCardDetailsCreated {
+  id: number;
+  koraCardId: string;
+  cardNumberMasked: string;
+  expiry: string;
+  cvv: string;
+  balance: number;
+  spendingLimit: number;
+  status: string;
+  purpose: string;
+  createdAt: string;
+}
+
+export interface KoraCardDetails {
+  id: number;
+  cardNumberMasked: string;
+  last4: string;
+  cardholderName: string;
+  balance: number;
+  spendingLimit: number;
+  status: string;
+  purpose: string;
+  linkedAdAccounts: number;
+  createdAt: string;
+}
+
+export interface KoraCardsListResponse {
+  cards: KoraCardDetails[];
+  total: number;
+}
+
+export type KoraCardStatusInputStatus = typeof KoraCardStatusInputStatus[keyof typeof KoraCardStatusInputStatus];
+
+
+export const KoraCardStatusInputStatus = {
+  frozen: 'frozen',
+  closed: 'closed',
+} as const;
+
+export interface KoraCardStatusInput {
+  status: KoraCardStatusInputStatus;
+}
+
+export interface KoraCardStatusUpdateResponse {
+  id: number;
+  status: string;
+}
+
+export type LinkCardAdAccountInputAdPlatform = typeof LinkCardAdAccountInputAdPlatform[keyof typeof LinkCardAdAccountInputAdPlatform];
+
+
+export const LinkCardAdAccountInputAdPlatform = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  google: 'google',
+  youtube: 'youtube',
+} as const;
+
+export interface LinkCardAdAccountInput {
+  adPlatform: LinkCardAdAccountInputAdPlatform;
+  adAccountId: string;
+  adAccountName: string;
+}
+
+export interface CardAdAccount {
+  id: number;
+  cardId: number;
+  adPlatform: string;
+  adAccountId: string;
+  adAccountName: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface CardAdAccountsListResponse {
+  adAccounts: CardAdAccount[];
+}
+
+export interface KoraWebhookInput { [key: string]: unknown }
+
 export type GetTransactionsParams = {
 page?: number;
 limit?: number;
@@ -406,5 +568,14 @@ export const GetPerformanceMetricsRange = {
 
 export type GetActivityParams = {
 limit?: number;
+};
+
+export type ListKoraDepositsParams = {
+page?: number;
+limit?: number;
+};
+
+export type ListKoraCardsParams = {
+status?: string;
 };
 

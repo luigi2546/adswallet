@@ -25,6 +25,8 @@ import type {
   Campaign,
   CampaignInput,
   CampaignUpdate,
+  CardAdAccount,
+  CardAdAccountsListResponse,
   ConnectAccountInput,
   DashboardSummary,
   DepositInput,
@@ -33,6 +35,20 @@ import type {
   GetPerformanceMetricsParams,
   GetTransactionsParams,
   HealthStatus,
+  KoraCardDetails,
+  KoraCardDetailsCreated,
+  KoraCardInput,
+  KoraCardStatusInput,
+  KoraCardStatusUpdateResponse,
+  KoraCardsListResponse,
+  KoraDepositDetails,
+  KoraDepositInput,
+  KoraDepositResponse,
+  KoraDepositsListResponse,
+  KoraWebhookInput,
+  LinkCardAdAccountInput,
+  ListKoraCardsParams,
+  ListKoraDepositsParams,
   LoginInput,
   MessageResult,
   PerformancePoint,
@@ -1776,6 +1792,762 @@ export function useGetActivity<TData = Awaited<ReturnType<typeof getActivity>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetActivityQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getInitializeKoraDepositUrl = () => {
+
+
+
+
+  return `/api/kora/deposits/initialize`
+}
+
+/**
+ * @summary Initialize a mobile money or card deposit charge via Kora
+ */
+export const initializeKoraDeposit = async (koraDepositInput: KoraDepositInput, options?: RequestInit): Promise<KoraDepositResponse> => {
+
+  return customFetch<KoraDepositResponse>(getInitializeKoraDepositUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      koraDepositInput,)
+  }
+);}
+
+
+
+
+export const getInitializeKoraDepositMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof initializeKoraDeposit>>, TError,{data: BodyType<KoraDepositInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof initializeKoraDeposit>>, TError,{data: BodyType<KoraDepositInput>}, TContext> => {
+
+const mutationKey = ['initializeKoraDeposit'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof initializeKoraDeposit>>, {data: BodyType<KoraDepositInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  initializeKoraDeposit(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InitializeKoraDepositMutationResult = NonNullable<Awaited<ReturnType<typeof initializeKoraDeposit>>>
+    export type InitializeKoraDepositMutationBody = BodyType<KoraDepositInput>
+    export type InitializeKoraDepositMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Initialize a mobile money or card deposit charge via Kora
+ */
+export const useInitializeKoraDeposit = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof initializeKoraDeposit>>, TError,{data: BodyType<KoraDepositInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof initializeKoraDeposit>>,
+        TError,
+        {data: BodyType<KoraDepositInput>},
+        TContext
+      > => {
+      return useMutation(getInitializeKoraDepositMutationOptions(options));
+    }
+
+export const getGetKoraDepositStatusUrl = (id: number,) => {
+
+
+
+
+  return `/api/kora/deposits/${id}/status`
+}
+
+/**
+ * @summary Get status of a deposit
+ */
+export const getKoraDepositStatus = async (id: number, options?: RequestInit): Promise<KoraDepositDetails> => {
+
+  return customFetch<KoraDepositDetails>(getGetKoraDepositStatusUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKoraDepositStatusQueryKey = (id: number,) => {
+    return [
+    `/api/kora/deposits/${id}/status`
+    ] as const;
+    }
+
+
+export const getGetKoraDepositStatusQueryOptions = <TData = Awaited<ReturnType<typeof getKoraDepositStatus>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKoraDepositStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKoraDepositStatusQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKoraDepositStatus>>> = ({ signal }) => getKoraDepositStatus(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKoraDepositStatus>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKoraDepositStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getKoraDepositStatus>>>
+export type GetKoraDepositStatusQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get status of a deposit
+ */
+
+export function useGetKoraDepositStatus<TData = Awaited<ReturnType<typeof getKoraDepositStatus>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKoraDepositStatus>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKoraDepositStatusQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListKoraDepositsUrl = (params?: ListKoraDepositsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/kora/deposits?${stringifiedParams}` : `/api/kora/deposits`
+}
+
+/**
+ * @summary List all user deposits
+ */
+export const listKoraDeposits = async (params?: ListKoraDepositsParams, options?: RequestInit): Promise<KoraDepositsListResponse> => {
+
+  return customFetch<KoraDepositsListResponse>(getListKoraDepositsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKoraDepositsQueryKey = (params?: ListKoraDepositsParams,) => {
+    return [
+    `/api/kora/deposits`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListKoraDepositsQueryOptions = <TData = Awaited<ReturnType<typeof listKoraDeposits>>, TError = ErrorType<unknown>>(params?: ListKoraDepositsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKoraDeposits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKoraDepositsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKoraDeposits>>> = ({ signal }) => listKoraDeposits(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKoraDeposits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKoraDepositsQueryResult = NonNullable<Awaited<ReturnType<typeof listKoraDeposits>>>
+export type ListKoraDepositsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all user deposits
+ */
+
+export function useListKoraDeposits<TData = Awaited<ReturnType<typeof listKoraDeposits>>, TError = ErrorType<unknown>>(
+ params?: ListKoraDepositsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKoraDeposits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKoraDepositsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getProcessKoraWebhookUrl = () => {
+
+
+
+
+  return `/api/kora/webhooks`
+}
+
+/**
+ * @summary Receive webhook updates from Kora
+ */
+export const processKoraWebhook = async (koraWebhookInput: KoraWebhookInput, options?: RequestInit): Promise<MessageResult> => {
+
+  return customFetch<MessageResult>(getProcessKoraWebhookUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      koraWebhookInput,)
+  }
+);}
+
+
+
+
+export const getProcessKoraWebhookMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processKoraWebhook>>, TError,{data: BodyType<KoraWebhookInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof processKoraWebhook>>, TError,{data: BodyType<KoraWebhookInput>}, TContext> => {
+
+const mutationKey = ['processKoraWebhook'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof processKoraWebhook>>, {data: BodyType<KoraWebhookInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  processKoraWebhook(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ProcessKoraWebhookMutationResult = NonNullable<Awaited<ReturnType<typeof processKoraWebhook>>>
+    export type ProcessKoraWebhookMutationBody = BodyType<KoraWebhookInput>
+    export type ProcessKoraWebhookMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Receive webhook updates from Kora
+ */
+export const useProcessKoraWebhook = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof processKoraWebhook>>, TError,{data: BodyType<KoraWebhookInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof processKoraWebhook>>,
+        TError,
+        {data: BodyType<KoraWebhookInput>},
+        TContext
+      > => {
+      return useMutation(getProcessKoraWebhookMutationOptions(options));
+    }
+
+export const getCreateKoraCardUrl = () => {
+
+
+
+
+  return `/api/kora/cards`
+}
+
+/**
+ * @summary Create a USD virtual card via Kora
+ */
+export const createKoraCard = async (koraCardInput: KoraCardInput, options?: RequestInit): Promise<KoraCardDetailsCreated> => {
+
+  return customFetch<KoraCardDetailsCreated>(getCreateKoraCardUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      koraCardInput,)
+  }
+);}
+
+
+
+
+export const getCreateKoraCardMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createKoraCard>>, TError,{data: BodyType<KoraCardInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createKoraCard>>, TError,{data: BodyType<KoraCardInput>}, TContext> => {
+
+const mutationKey = ['createKoraCard'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createKoraCard>>, {data: BodyType<KoraCardInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createKoraCard(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateKoraCardMutationResult = NonNullable<Awaited<ReturnType<typeof createKoraCard>>>
+    export type CreateKoraCardMutationBody = BodyType<KoraCardInput>
+    export type CreateKoraCardMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a USD virtual card via Kora
+ */
+export const useCreateKoraCard = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createKoraCard>>, TError,{data: BodyType<KoraCardInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createKoraCard>>,
+        TError,
+        {data: BodyType<KoraCardInput>},
+        TContext
+      > => {
+      return useMutation(getCreateKoraCardMutationOptions(options));
+    }
+
+export const getListKoraCardsUrl = (params?: ListKoraCardsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/kora/cards?${stringifiedParams}` : `/api/kora/cards`
+}
+
+/**
+ * @summary List user's virtual cards
+ */
+export const listKoraCards = async (params?: ListKoraCardsParams, options?: RequestInit): Promise<KoraCardsListResponse> => {
+
+  return customFetch<KoraCardsListResponse>(getListKoraCardsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListKoraCardsQueryKey = (params?: ListKoraCardsParams,) => {
+    return [
+    `/api/kora/cards`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListKoraCardsQueryOptions = <TData = Awaited<ReturnType<typeof listKoraCards>>, TError = ErrorType<unknown>>(params?: ListKoraCardsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKoraCards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListKoraCardsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listKoraCards>>> = ({ signal }) => listKoraCards(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listKoraCards>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListKoraCardsQueryResult = NonNullable<Awaited<ReturnType<typeof listKoraCards>>>
+export type ListKoraCardsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List user's virtual cards
+ */
+
+export function useListKoraCards<TData = Awaited<ReturnType<typeof listKoraCards>>, TError = ErrorType<unknown>>(
+ params?: ListKoraCardsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listKoraCards>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListKoraCardsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetKoraCardUrl = (id: number,) => {
+
+
+
+
+  return `/api/kora/cards/${id}`
+}
+
+/**
+ * @summary Get details of a virtual card
+ */
+export const getKoraCard = async (id: number, options?: RequestInit): Promise<KoraCardDetails> => {
+
+  return customFetch<KoraCardDetails>(getGetKoraCardUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetKoraCardQueryKey = (id: number,) => {
+    return [
+    `/api/kora/cards/${id}`
+    ] as const;
+    }
+
+
+export const getGetKoraCardQueryOptions = <TData = Awaited<ReturnType<typeof getKoraCard>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKoraCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetKoraCardQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getKoraCard>>> = ({ signal }) => getKoraCard(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getKoraCard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetKoraCardQueryResult = NonNullable<Awaited<ReturnType<typeof getKoraCard>>>
+export type GetKoraCardQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get details of a virtual card
+ */
+
+export function useGetKoraCard<TData = Awaited<ReturnType<typeof getKoraCard>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getKoraCard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetKoraCardQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateKoraCardStatusUrl = (id: number,) => {
+
+
+
+
+  return `/api/kora/cards/${id}/status`
+}
+
+/**
+ * @summary Freeze or close a virtual card
+ */
+export const updateKoraCardStatus = async (id: number,
+    koraCardStatusInput: KoraCardStatusInput, options?: RequestInit): Promise<KoraCardStatusUpdateResponse> => {
+
+  return customFetch<KoraCardStatusUpdateResponse>(getUpdateKoraCardStatusUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      koraCardStatusInput,)
+  }
+);}
+
+
+
+
+export const getUpdateKoraCardStatusMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKoraCardStatus>>, TError,{id: number;data: BodyType<KoraCardStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateKoraCardStatus>>, TError,{id: number;data: BodyType<KoraCardStatusInput>}, TContext> => {
+
+const mutationKey = ['updateKoraCardStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateKoraCardStatus>>, {id: number;data: BodyType<KoraCardStatusInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateKoraCardStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateKoraCardStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateKoraCardStatus>>>
+    export type UpdateKoraCardStatusMutationBody = BodyType<KoraCardStatusInput>
+    export type UpdateKoraCardStatusMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Freeze or close a virtual card
+ */
+export const useUpdateKoraCardStatus = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateKoraCardStatus>>, TError,{id: number;data: BodyType<KoraCardStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateKoraCardStatus>>,
+        TError,
+        {id: number;data: BodyType<KoraCardStatusInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateKoraCardStatusMutationOptions(options));
+    }
+
+export const getLinkCardAdAccountUrl = (id: number,) => {
+
+
+
+
+  return `/api/kora/cards/${id}/ad-accounts`
+}
+
+/**
+ * @summary Link a card to an advertising account
+ */
+export const linkCardAdAccount = async (id: number,
+    linkCardAdAccountInput: LinkCardAdAccountInput, options?: RequestInit): Promise<CardAdAccount> => {
+
+  return customFetch<CardAdAccount>(getLinkCardAdAccountUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      linkCardAdAccountInput,)
+  }
+);}
+
+
+
+
+export const getLinkCardAdAccountMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkCardAdAccount>>, TError,{id: number;data: BodyType<LinkCardAdAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof linkCardAdAccount>>, TError,{id: number;data: BodyType<LinkCardAdAccountInput>}, TContext> => {
+
+const mutationKey = ['linkCardAdAccount'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkCardAdAccount>>, {id: number;data: BodyType<LinkCardAdAccountInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  linkCardAdAccount(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LinkCardAdAccountMutationResult = NonNullable<Awaited<ReturnType<typeof linkCardAdAccount>>>
+    export type LinkCardAdAccountMutationBody = BodyType<LinkCardAdAccountInput>
+    export type LinkCardAdAccountMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Link a card to an advertising account
+ */
+export const useLinkCardAdAccount = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkCardAdAccount>>, TError,{id: number;data: BodyType<LinkCardAdAccountInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof linkCardAdAccount>>,
+        TError,
+        {id: number;data: BodyType<LinkCardAdAccountInput>},
+        TContext
+      > => {
+      return useMutation(getLinkCardAdAccountMutationOptions(options));
+    }
+
+export const getListCardAdAccountsUrl = (id: number,) => {
+
+
+
+
+  return `/api/kora/cards/${id}/ad-accounts`
+}
+
+/**
+ * @summary List linked ad accounts for a card
+ */
+export const listCardAdAccounts = async (id: number, options?: RequestInit): Promise<CardAdAccountsListResponse> => {
+
+  return customFetch<CardAdAccountsListResponse>(getListCardAdAccountsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCardAdAccountsQueryKey = (id: number,) => {
+    return [
+    `/api/kora/cards/${id}/ad-accounts`
+    ] as const;
+    }
+
+
+export const getListCardAdAccountsQueryOptions = <TData = Awaited<ReturnType<typeof listCardAdAccounts>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCardAdAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCardAdAccountsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCardAdAccounts>>> = ({ signal }) => listCardAdAccounts(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCardAdAccounts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCardAdAccountsQueryResult = NonNullable<Awaited<ReturnType<typeof listCardAdAccounts>>>
+export type ListCardAdAccountsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List linked ad accounts for a card
+ */
+
+export function useListCardAdAccounts<TData = Awaited<ReturnType<typeof listCardAdAccounts>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCardAdAccounts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCardAdAccountsQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

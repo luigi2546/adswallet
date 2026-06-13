@@ -446,3 +446,190 @@ export const GetActivityResponseItem = zod.object({
 export const GetActivityResponse = zod.array(GetActivityResponseItem)
 
 
+/**
+ * @summary Initialize a mobile money or card deposit charge via Kora
+ */
+export const initializeKoraDepositBodyAmountMin = 0.01;
+
+
+
+export const InitializeKoraDepositBody = zod.object({
+  "amount": zod.number().min(initializeKoraDepositBodyAmountMin),
+  "currency": zod.enum(['GHS', 'NGN', 'KES']),
+  "paymentMethod": zod.enum(['mobile_money', 'bank_transfer', 'card']),
+  "provider": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "email": zod.string().optional()
+})
+
+
+/**
+ * @summary Get status of a deposit
+ */
+export const GetKoraDepositStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetKoraDepositStatusResponse = zod.object({
+  "id": zod.number(),
+  "reference": zod.string(),
+  "status": zod.string(),
+  "amountLocal": zod.number(),
+  "localCurrency": zod.string(),
+  "amountUsd": zod.number().nullish(),
+  "exchangeRate": zod.number().nullish(),
+  "fee": zod.number(),
+  "adwalletFee": zod.number(),
+  "paymentMethod": zod.string(),
+  "provider": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List all user deposits
+ */
+export const ListKoraDepositsQueryParams = zod.object({
+  "page": zod.coerce.number().optional(),
+  "limit": zod.coerce.number().optional()
+})
+
+export const ListKoraDepositsResponse = zod.object({
+  "deposits": zod.array(zod.object({
+  "id": zod.number(),
+  "reference": zod.string(),
+  "status": zod.string(),
+  "amountLocal": zod.number(),
+  "localCurrency": zod.string(),
+  "amountUsd": zod.number().nullish(),
+  "exchangeRate": zod.number().nullish(),
+  "fee": zod.number(),
+  "adwalletFee": zod.number(),
+  "paymentMethod": zod.string(),
+  "provider": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number()
+})
+
+
+/**
+ * @summary Receive webhook updates from Kora
+ */
+export const ProcessKoraWebhookBody = zod.record(zod.string(), zod.unknown())
+
+export const ProcessKoraWebhookResponse = zod.object({
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Create a USD virtual card via Kora
+ */
+
+
+
+export const CreateKoraCardBody = zod.object({
+  "amountUsd": zod.number().min(1),
+  "spendingLimit": zod.number().optional(),
+  "purpose": zod.enum(['facebook_ads', 'instagram_ads', 'tiktok_ads', 'google_ads', 'youtube_ads', 'general']).optional()
+})
+
+
+/**
+ * @summary List user's virtual cards
+ */
+export const ListKoraCardsQueryParams = zod.object({
+  "status": zod.coerce.string().optional()
+})
+
+export const ListKoraCardsResponse = zod.object({
+  "cards": zod.array(zod.object({
+  "id": zod.number(),
+  "cardNumberMasked": zod.string(),
+  "last4": zod.string(),
+  "cardholderName": zod.string(),
+  "balance": zod.number(),
+  "spendingLimit": zod.number(),
+  "status": zod.string(),
+  "purpose": zod.string(),
+  "linkedAdAccounts": zod.number(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number()
+})
+
+
+/**
+ * @summary Get details of a virtual card
+ */
+export const GetKoraCardParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetKoraCardResponse = zod.object({
+  "id": zod.number(),
+  "cardNumberMasked": zod.string(),
+  "last4": zod.string(),
+  "cardholderName": zod.string(),
+  "balance": zod.number(),
+  "spendingLimit": zod.number(),
+  "status": zod.string(),
+  "purpose": zod.string(),
+  "linkedAdAccounts": zod.number(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Freeze or close a virtual card
+ */
+export const UpdateKoraCardStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateKoraCardStatusBody = zod.object({
+  "status": zod.enum(['frozen', 'closed'])
+})
+
+export const UpdateKoraCardStatusResponse = zod.object({
+  "id": zod.number(),
+  "status": zod.string()
+})
+
+
+/**
+ * @summary Link a card to an advertising account
+ */
+export const LinkCardAdAccountParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const LinkCardAdAccountBody = zod.object({
+  "adPlatform": zod.enum(['facebook', 'instagram', 'tiktok', 'google', 'youtube']),
+  "adAccountId": zod.string(),
+  "adAccountName": zod.string()
+})
+
+
+/**
+ * @summary List linked ad accounts for a card
+ */
+export const ListCardAdAccountsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListCardAdAccountsResponse = zod.object({
+  "adAccounts": zod.array(zod.object({
+  "id": zod.number(),
+  "cardId": zod.number(),
+  "adPlatform": zod.string(),
+  "adAccountId": zod.string(),
+  "adAccountName": zod.string(),
+  "status": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+

@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useCurrency } from "@/components/currency-context";
 import { AFRICAN_COUNTRIES, getCountryByCode } from "@/lib/countries";
+import { getAccessToken } from "@/lib/supabase";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -137,7 +138,8 @@ export default function SettingsPage() {
   const handleConnect = async (platformId: string) => {
     setConnectingPlatform(platformId);
     try {
-      const token = localStorage.getItem("adwallet_token");
+      const token = await getAccessToken();
+      if (!token) throw new Error("Not authenticated");
       const res = await fetch(`${BASE_URL}/api/oauth/connect/${platformId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -13,6 +13,7 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
 import WalletPage from "./pages/wallet";
+import CardsPage from "./pages/cards";
 import CampaignsPage from "./pages/campaigns/index";
 import NewCampaignPage from "./pages/campaigns/new";
 import CampaignDetail from "./pages/campaigns/detail";
@@ -94,6 +95,7 @@ function Router() {
       {/* Protected app routes */}
       <Route path="/dashboard"><ProtectedRoute component={Dashboard} /></Route>
       <Route path="/wallet"><ProtectedRoute component={WalletPage} /></Route>
+      <Route path="/cards"><ProtectedRoute component={CardsPage} /></Route>
       <Route path="/campaigns"><ProtectedRoute component={CampaignsPage} /></Route>
       <Route path="/campaigns/new"><ProtectedRoute component={NewCampaignPage} /></Route>
       <Route path="/campaigns/:id"><ProtectedRoute component={CampaignDetail} /></Route>

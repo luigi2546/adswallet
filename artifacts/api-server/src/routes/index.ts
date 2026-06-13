@@ -6,6 +6,8 @@ import campaignsRouter from "./campaigns";
 import analyticsRouter from "./analytics";
 import socialAccountsRouter from "./social-accounts";
 import oauthRouter from "./oauth";
+import koraDepositsRouter from "./kora-deposits";
+import koraCardsRouter from "./kora-cards";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use(campaignsRouter);
 router.use(analyticsRouter);
 router.use(socialAccountsRouter);
 router.use(oauthRouter);
+router.use(koraDepositsRouter);
+router.use(koraCardsRouter);
 
 export default router;

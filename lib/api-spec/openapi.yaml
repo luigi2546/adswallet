@@ -22,6 +22,8 @@ tags:
     description: Activity feed and notifications
   - name: platforms
     description: Ad platform operations
+  - name: kora
+    description: Kora payment and virtual card operations
 
 paths:
   /healthz:
@@ -445,6 +447,207 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityItem"
 
+  # Kora Payments & Cards
+  /kora/deposits/initialize:
+    post:
+      operationId: initializeKoraDeposit
+      tags: [kora]
+      summary: Initialize a mobile money or card deposit charge via Kora
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KoraDepositInput"
+      responses:
+        "201":
+          description: Deposit initialized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraDepositResponse"
+
+  /kora/deposits/{id}/status:
+    get:
+      operationId: getKoraDepositStatus
+      tags: [kora]
+      summary: Get status of a deposit
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deposit status details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraDepositDetails"
+
+  /kora/deposits:
+    get:
+      operationId: listKoraDeposits
+      tags: [kora]
+      summary: List all user deposits
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: limit
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of deposits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraDepositsListResponse"
+
+  /kora/webhooks:
+    post:
+      operationId: processKoraWebhook
+      tags: [kora]
+      summary: Receive webhook updates from Kora
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KoraWebhookInput"
+      responses:
+        "200":
+          description: Webhook received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResult"
+
+  /kora/cards:
+    post:
+      operationId: createKoraCard
+      tags: [kora]
+      summary: Create a USD virtual card via Kora
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KoraCardInput"
+      responses:
+        "201":
+          description: Card created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraCardDetailsCreated"
+    get:
+      operationId: listKoraCards
+      tags: [kora]
+      summary: List user's virtual cards
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraCardsListResponse"
+
+  /kora/cards/{id}:
+    get:
+      operationId: getKoraCard
+      tags: [kora]
+      summary: Get details of a virtual card
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Card details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraCardDetails"
+
+  /kora/cards/{id}/status:
+    patch:
+      operationId: updateKoraCardStatus
+      tags: [kora]
+      summary: Freeze or close a virtual card
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KoraCardStatusInput"
+      responses:
+        "200":
+          description: Card status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KoraCardStatusUpdateResponse"
+
+  /kora/cards/{id}/ad-accounts:
+    post:
+      operationId: linkCardAdAccount
+      tags: [kora]
+      summary: Link a card to an advertising account
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinkCardAdAccountInput"
+      responses:
+        "201":
+          description: Ad account linked to card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardAdAccount"
+    get:
+      operationId: listCardAdAccounts
+      tags: [kora]
+      summary: List linked ad accounts for a card
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of linked ad accounts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CardAdAccountsListResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -832,3 +1035,221 @@ components:
         createdAt:
           type: string
           format: date-time
+
+    KoraDepositInput:
+      type: object
+      required: [amount, currency, paymentMethod]
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+        currency:
+          type: string
+          enum: [GHS, NGN, KES]
+        paymentMethod:
+          type: string
+          enum: [mobile_money, bank_transfer, card]
+        provider:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+
+    KoraDepositResponse:
+      type: object
+      required: [id, reference, status, amount, currency]
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        authorizationUrl:
+          type: ["string", "null"]
+        status:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+
+    KoraDepositDetails:
+      type: object
+      required: [id, reference, status, amountLocal, localCurrency, fee, adwalletFee, paymentMethod, createdAt]
+      properties:
+        id:
+          type: integer
+        reference:
+          type: string
+        status:
+          type: string
+        amountLocal:
+          type: number
+        localCurrency:
+          type: string
+        amountUsd:
+          type: ["number", "null"]
+        exchangeRate:
+          type: ["number", "null"]
+        fee:
+          type: number
+        adwalletFee:
+          type: number
+        paymentMethod:
+          type: string
+        provider:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    KoraDepositsListResponse:
+      type: object
+      required: [deposits, total, page]
+      properties:
+        deposits:
+          type: array
+          items:
+            $ref: "#/components/schemas/KoraDepositDetails"
+        total:
+          type: integer
+        page:
+          type: integer
+
+    KoraCardInput:
+      type: object
+      required: [amountUsd]
+      properties:
+        amountUsd:
+          type: number
+          minimum: 1
+        spendingLimit:
+          type: number
+        purpose:
+          type: string
+          enum: [facebook_ads, instagram_ads, tiktok_ads, google_ads, youtube_ads, general]
+
+    KoraCardDetailsCreated:
+      type: object
+      required: [id, koraCardId, cardNumberMasked, expiry, cvv, balance, spendingLimit, status, purpose, createdAt]
+      properties:
+        id:
+          type: integer
+        koraCardId:
+          type: string
+        cardNumberMasked:
+          type: string
+        expiry:
+          type: string
+        cvv:
+          type: string
+        balance:
+          type: number
+        spendingLimit:
+          type: number
+        status:
+          type: string
+        purpose:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    KoraCardDetails:
+      type: object
+      required: [id, cardNumberMasked, last4, cardholderName, balance, spendingLimit, status, purpose, linkedAdAccounts, createdAt]
+      properties:
+        id:
+          type: integer
+        cardNumberMasked:
+          type: string
+        last4:
+          type: string
+        cardholderName:
+          type: string
+        balance:
+          type: number
+        spendingLimit:
+          type: number
+        status:
+          type: string
+        purpose:
+          type: string
+        linkedAdAccounts:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    KoraCardsListResponse:
+      type: object
+      required: [cards, total]
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: "#/components/schemas/KoraCardDetails"
+        total:
+          type: integer
+
+    KoraCardStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [frozen, closed]
+
+    KoraCardStatusUpdateResponse:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+
+    LinkCardAdAccountInput:
+      type: object
+      required: [adPlatform, adAccountId, adAccountName]
+      properties:
+        adPlatform:
+          type: string
+          enum: [facebook, instagram, tiktok, google, youtube]
+        adAccountId:
+          type: string
+        adAccountName:
+          type: string
+
+    CardAdAccount:
+      type: object
+      required: [id, cardId, adPlatform, adAccountId, adAccountName, status, createdAt]
+      properties:
+        id:
+          type: integer
+        cardId:
+          type: integer
+        adPlatform:
+          type: string
+        adAccountId:
+          type: string
+        adAccountName:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    CardAdAccountsListResponse:
+      type: object
+      required: [adAccounts]
+      properties:
+        adAccounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CardAdAccount"
+
+    KoraWebhookInput:
+      type: object
+      additionalProperties: true

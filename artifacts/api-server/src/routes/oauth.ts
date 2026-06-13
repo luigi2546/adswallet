@@ -21,7 +21,7 @@ const SUPPORTED_PLATFORMS = Object.keys(PLATFORM_CONFIGS);
 // GET /api/oauth/connect/:platform
 // Returns { url, demo } — frontend redirects to url
 router.get("/oauth/connect/:platform", requireAuth, async (req, res) => {
-  const { platform } = req.params;
+  const platform = req.params.platform as string;
   if (!SUPPORTED_PLATFORMS.includes(platform)) {
     res.status(400).json({ error: `Unsupported platform: ${platform}` });
     return;
@@ -45,7 +45,7 @@ router.get("/oauth/connect/:platform", requireAuth, async (req, res) => {
 // GET /api/oauth/callback/:platform
 // Browser redirect from the OAuth provider — exchanges code, stores token
 router.get("/oauth/callback/:platform", async (req, res) => {
-  const { platform } = req.params;
+  const platform = req.params.platform as string;
   const { code, state, error } = req.query as Record<string, string>;
   const frontendBase = `https://${getAppDomain()}/settings`;
 
@@ -138,7 +138,7 @@ router.get("/oauth/status", requireAuth, async (req, res) => {
 // Revoke token for a platform
 router.delete("/oauth/:platform", requireAuth, async (req, res) => {
   const userId = (req as any).user.id;
-  const { platform } = req.params;
+  const platform = req.params.platform as string;
 
   await db.delete(oauthTokensTable).where(
     and(eq(oauthTokensTable.userId, userId), eq(oauthTokensTable.platform, platform as any))

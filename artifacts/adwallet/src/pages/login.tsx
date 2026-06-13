@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation, Link } from "wouter";
-import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/components/auth-context";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,9 @@ const loginSchema = z.object({
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
+  const { token } = useAuth();
   const { toast } = useToast();
-  const loginMutation = useLogin();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -30,24 +30,38 @@ export default function Login() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof loginSchema>) {
-    loginMutation.mutate(
-      { data: values },
-      {
-        onSuccess: (data) => {
-          login(data.token);
-          toast({ title: "Welcome back", description: "Successfully logged in." });
-          setLocation("/dashboard");
-        },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Login failed",
-            description: error.message || "Invalid credentials",
-          });
-        },
+  useEffect(() => {
+    if (token) {
+      setLocation("/dashboard");
+    }
+  }, [token, setLocation]);
+
+  async function onSubmit(values: z.infer<typeof loginSchema>) {
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: error.message || "Invalid credentials",
+        });
+        return;
       }
-    );
+
+      toast({ title: "Welcome back", description: "Successfully logged in." });
+      setLocation("/dashboard");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (token) {
+    return null;
   }
 
   return (
@@ -88,8 +102,8 @@ export default function Login() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                {loginMutation.isPending ? "Signing in..." : "Sign In"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Sign In"}
               </Button>
             </form>
           </Form>

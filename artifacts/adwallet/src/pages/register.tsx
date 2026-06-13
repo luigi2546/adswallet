@@ -1,9 +1,9 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLocation, Link } from "wouter";
-import { useRegister } from "@workspace/api-client-react";
-import { useAuth } from "@/components/auth-context";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,8 @@ const registerSchema = z.object({
 
 export default function Register() {
   const [, setLocation] = useLocation();
-  const { login } = useAuth();
   const { toast } = useToast();
-  const registerMutation = useRegister();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { setCountry } = useCurrency();
 
   const form = useForm<z.infer<typeof registerSchema>>({
@@ -42,25 +41,46 @@ export default function Register() {
   const selectedCountry = form.watch("country");
   const countryData = selectedCountry ? getCountryByCode(selectedCountry) : null;
 
-  function onSubmit(values: z.infer<typeof registerSchema>) {
-    registerMutation.mutate(
-      { data: { ...values, businessName: values.businessName || undefined } },
-      {
-        onSuccess: (data) => {
-          login(data.token);
-          if (values.country) setCountry(values.country);
-          toast({ title: "Account created", description: "Welcome to AdWallet Africa!" });
-          setLocation("/dashboard");
+  async function onSubmit(values: z.infer<typeof registerSchema>) {
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            name: values.name,
+            businessName: values.businessName || null,
+            country: values.country,
+          },
         },
-        onError: (error) => {
-          toast({
-            variant: "destructive",
-            title: "Registration failed",
-            description: error.message || "Could not create account",
-          });
-        },
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Registration failed",
+          description: error.message || "Could not create account",
+        });
+        return;
       }
-    );
+
+      if (!data.session) {
+        toast({
+          title: "Check your email",
+          description:
+            "We sent a confirmation link. Sign in after confirming your email.",
+        });
+        setLocation("/login");
+        return;
+      }
+
+      if (values.country) setCountry(values.country);
+      toast({ title: "Account created", description: "Welcome to AdWallet Africa!" });
+      setLocation("/dashboard");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -166,8 +186,8 @@ export default function Register() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-                {registerMutation.isPending ? "Creating account..." : "Sign Up"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creating account..." : "Sign Up"}
               </Button>
             </form>
           </Form>

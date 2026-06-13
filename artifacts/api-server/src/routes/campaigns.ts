@@ -76,7 +76,7 @@ router.post("/campaigns", requireAuth, async (req, res) => {
 
 router.get("/campaigns/:id", requireAuth, async (req, res) => {
   const user = (req as any).user;
-  const idParsed = GetCampaignParams.safeParse({ id: parseInt(req.params.id) });
+  const idParsed = GetCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
@@ -93,7 +93,7 @@ router.get("/campaigns/:id", requireAuth, async (req, res) => {
 
 router.patch("/campaigns/:id", requireAuth, async (req, res) => {
   const user = (req as any).user;
-  const idParsed = UpdateCampaignParams.safeParse({ id: parseInt(req.params.id) });
+  const idParsed = UpdateCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
@@ -128,7 +128,7 @@ router.patch("/campaigns/:id", requireAuth, async (req, res) => {
 
 router.delete("/campaigns/:id", requireAuth, async (req, res) => {
   const user = (req as any).user;
-  const idParsed = DeleteCampaignParams.safeParse({ id: parseInt(req.params.id) });
+  const idParsed = DeleteCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
@@ -145,7 +145,7 @@ router.delete("/campaigns/:id", requireAuth, async (req, res) => {
 
 router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
   const user = (req as any).user;
-  const idParsed = LaunchCampaignParams.safeParse({ id: parseInt(req.params.id) });
+  const idParsed = LaunchCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
@@ -204,7 +204,7 @@ router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
 
 router.post("/campaigns/:id/pause", requireAuth, async (req, res) => {
   const user = (req as any).user;
-  const idParsed = PauseCampaignParams.safeParse({ id: parseInt(req.params.id) });
+  const idParsed = PauseCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;

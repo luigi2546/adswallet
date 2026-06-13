@@ -156,7 +156,7 @@ router.post("/social-accounts", requireAuth, async (req, res) => {
 // DELETE /social-accounts/:id
 router.delete("/social-accounts/:id", requireAuth, async (req, res) => {
   const userId = (req as any).user.id;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
 
   await db.delete(socialAccountsTable).where(
     and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.userId, userId))
@@ -168,7 +168,7 @@ router.delete("/social-accounts/:id", requireAuth, async (req, res) => {
 // GET /social-accounts/:id/posts
 router.get("/social-accounts/:id/posts", requireAuth, async (req, res) => {
   const userId = (req as any).user.id;
-  const id = parseInt(req.params.id, 10);
+  const id = parseInt(req.params.id as string, 10);
 
   const [account] = await db.select().from(socialAccountsTable).where(
     and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.userId, userId))

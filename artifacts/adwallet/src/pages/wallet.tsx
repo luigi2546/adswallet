@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetWallet, useGetTransactions, useDepositFunds, getGetWalletQueryKey, getGetTransactionsQueryKey, DepositInputMethod } from "@workspace/api-client-react";
+import { useGetWallet, useGetTransactions, useInitializeKoraDeposit, getGetWalletQueryKey, getGetTransactionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -23,7 +23,7 @@ export default function WalletPage() {
 
   const { data: wallet } = useGetWallet();
   const { data: transactionsData } = useGetTransactions();
-  const depositMutation = useDepositFunds();
+  const depositMutation = useInitializeKoraDeposit();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { formatCurrency, currency, currencySymbol } = useCurrency();
@@ -31,24 +31,36 @@ export default function WalletPage() {
   const handleDeposit = () => {
     if (!amount || isNaN(Number(amount))) return;
     
+    const allowedCurrencies = ["GHS", "NGN", "KES"];
+    const koraCurrency = allowedCurrencies.includes(currency) ? currency : "GHS";
+    const koraMethod = method === "momo" ? "mobile_money" : method;
+
     depositMutation.mutate(
       { 
         data: {
           amount: Number(amount),
-          method: method as any,
-          phone: phone || null,
-          provider: provider || null
+          currency: koraCurrency as any,
+          paymentMethod: koraMethod as any,
+          phone: phone || undefined,
+          provider: provider || undefined,
         }
       },
       {
-        onSuccess: () => {
-          toast({ title: "Deposit initiated", description: "Your deposit is processing." });
+        onSuccess: (res) => {
+          toast({ title: "Redirecting...", description: "Forwarding you to the secure checkout page." });
           setIsDepositOpen(false);
           setAmount("");
-          queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
-          queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
+          setPhone("");
+          setProvider("");
+          if (res.authorizationUrl) {
+            window.location.href = res.authorizationUrl;
+          } else {
+            toast({ title: "Deposit pending", description: "Verify transaction on your device." });
+            queryClient.invalidateQueries({ queryKey: getGetWalletQueryKey() });
+            queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
+          }
         },
-        onError: (err) => {
+        onError: (err: any) => {
           toast({ variant: "destructive", title: "Error", description: err.message });
         }
       }

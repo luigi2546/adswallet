@@ -4,6 +4,7 @@ import { useCurrency } from "./currency-context";
 import { 
   LayoutDashboard, 
   WalletCards, 
+  CreditCard,
   Megaphone, 
   BarChart3, 
   Settings, 
@@ -17,6 +18,7 @@ import { Button } from "./ui/button";
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/wallet", label: "Wallet", icon: WalletCards },
+  { href: "/cards", label: "Virtual Cards", icon: CreditCard },
   { href: "/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
