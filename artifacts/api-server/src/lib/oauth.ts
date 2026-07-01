@@ -13,23 +13,23 @@ export function getCallbackUri(platform: string): string {
 
 // ── State token (stateless, HMAC-signed) ────────────────────────────────────
 
-export function generateState(userId: number, platform: string): string {
+export function generateState(userId: number, platform: string, organizationId: number): string {
   const nonce = crypto.randomBytes(16).toString("hex");
-  const payload = `${userId}:${platform}:${nonce}`;
+  const payload = `${userId}:${platform}:${organizationId}:${nonce}`;
   const sig = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
   return Buffer.from(`${payload}:${sig}`).toString("base64url");
 }
 
-export function verifyState(state: string): { userId: number; platform: string } | null {
+export function verifyState(state: string): { userId: number; platform: string; organizationId: number } | null {
   try {
     const decoded = Buffer.from(state, "base64url").toString("utf8");
     const parts = decoded.split(":");
-    if (parts.length !== 4) return null;
-    const [userId, platform, nonce, sig] = parts;
-    const payload = `${userId}:${platform}:${nonce}`;
+    if (parts.length !== 5) return null;
+    const [userId, platform, organizationId, nonce, sig] = parts;
+    const payload = `${userId}:${platform}:${organizationId}:${nonce}`;
     const expected = crypto.createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
     if (sig !== expected) return null;
-    return { userId: parseInt(userId, 10), platform };
+    return { userId: parseInt(userId, 10), platform, organizationId: parseInt(organizationId, 10) };
   } catch {
     return null;
   }

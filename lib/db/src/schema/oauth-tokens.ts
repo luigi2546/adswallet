@@ -1,10 +1,12 @@
 import { pgTable, serial, integer, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 import { platformEnum } from "./campaigns";
 
 export const oauthTokensTable = pgTable("oauth_tokens", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   platform: platformEnum("platform").notNull(),
   accessToken: text("access_token").notNull(),
   refreshToken: text("refresh_token"),
@@ -15,7 +17,7 @@ export const oauthTokensTable = pgTable("oauth_tokens", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (t) => [
-  uniqueIndex("oauth_tokens_user_platform_idx").on(t.userId, t.platform),
+  uniqueIndex("oauth_tokens_org_platform_idx").on(t.organizationId, t.platform),
 ]);
 
 export type OauthToken = typeof oauthTokensTable.$inferSelect;

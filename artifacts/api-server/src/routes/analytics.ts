@@ -7,10 +7,10 @@ import { GetPerformanceMetricsQueryParams, GetActivityQueryParams } from "@works
 const router = Router();
 
 router.get("/analytics/dashboard", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
 
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id)).limit(1);
-  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.userId, user.id));
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.organizationId, organization.id)).limit(1);
+  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.organizationId, organization.id));
 
   const activeCampaigns = campaigns.filter(c => c.status === "active").length;
   const completedCampaigns = campaigns.filter(c => c.status === "completed").length;
@@ -40,12 +40,12 @@ router.get("/analytics/dashboard", requireAuth, async (req, res) => {
 });
 
 router.get("/analytics/performance", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const params = GetPerformanceMetricsQueryParams.safeParse(req.query);
   const range = params.success ? (params.data.range ?? "30d") : "30d";
   const days = range === "7d" ? 7 : range === "90d" ? 90 : 30;
 
-  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.userId, user.id));
+  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.organizationId, organization.id));
   const activeCampaigns = campaigns.filter(c => c.status === "active" || c.status === "completed");
 
   const points = [];
@@ -83,8 +83,8 @@ router.get("/analytics/performance", requireAuth, async (req, res) => {
 });
 
 router.get("/analytics/platform-breakdown", requireAuth, async (req, res) => {
-  const user = (req as any).user;
-  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.userId, user.id));
+  const organization = (req as any).organization;
+  const campaigns = await db.select().from(campaignsTable).where(eq(campaignsTable.organizationId, organization.id));
 
   const platforms = ["facebook", "instagram", "tiktok", "google", "youtube"];
   const breakdown = platforms.map(platform => {
@@ -105,13 +105,13 @@ router.get("/analytics/platform-breakdown", requireAuth, async (req, res) => {
 });
 
 router.get("/activity", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const params = GetActivityQueryParams.safeParse(req.query);
   const limit = params.success ? (params.data.limit ?? 20) : 20;
 
   const items = await db.select()
     .from(activityTable)
-    .where(eq(activityTable.userId, user.id))
+    .where(eq(activityTable.organizationId, organization.id))
     .orderBy(desc(activityTable.createdAt))
     .limit(limit);
 

@@ -31,9 +31,9 @@ function formatCampaign(c: any) {
 }
 
 router.get("/campaigns", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const params = GetCampaignsQueryParams.safeParse(req.query);
-  const conditions: any[] = [eq(campaignsTable.userId, user.id)];
+  const conditions: any[] = [eq(campaignsTable.organizationId, organization.id)];
 
   if (params.success && params.data.status) {
     conditions.push(eq(campaignsTable.status, params.data.status as any));
@@ -48,6 +48,7 @@ router.get("/campaigns", requireAuth, async (req, res) => {
 
 router.post("/campaigns", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const parsed = CreateCampaignBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid input" });
@@ -57,6 +58,7 @@ router.post("/campaigns", requireAuth, async (req, res) => {
 
   const [campaign] = await db.insert(campaignsTable).values({
     userId: user.id,
+    organizationId: organization.id,
     name,
     platform: platform as any,
     objective: objective as any,
@@ -75,14 +77,14 @@ router.post("/campaigns", requireAuth, async (req, res) => {
 });
 
 router.get("/campaigns/:id", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const idParsed = GetCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
   const [campaign] = await db.select().from(campaignsTable)
-    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.userId, user.id)))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .limit(1);
   if (!campaign) {
     res.status(404).json({ error: "Campaign not found" });
@@ -92,7 +94,7 @@ router.get("/campaigns/:id", requireAuth, async (req, res) => {
 });
 
 router.patch("/campaigns/:id", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const idParsed = UpdateCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
@@ -117,7 +119,7 @@ router.patch("/campaigns/:id", requireAuth, async (req, res) => {
 
   const [updated] = await db.update(campaignsTable)
     .set(updates)
-    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.userId, user.id)))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .returning();
   if (!updated) {
     res.status(404).json({ error: "Campaign not found" });
@@ -127,14 +129,14 @@ router.patch("/campaigns/:id", requireAuth, async (req, res) => {
 });
 
 router.delete("/campaigns/:id", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const idParsed = DeleteCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
   const [deleted] = await db.delete(campaignsTable)
-    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.userId, user.id)))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .returning();
   if (!deleted) {
     res.status(404).json({ error: "Campaign not found" });
@@ -145,6 +147,7 @@ router.delete("/campaigns/:id", requireAuth, async (req, res) => {
 
 router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const idParsed = LaunchCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
@@ -152,14 +155,14 @@ router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
   }
 
   const [campaign] = await db.select().from(campaignsTable)
-    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.userId, user.id)))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .limit(1);
   if (!campaign) {
     res.status(404).json({ error: "Campaign not found" });
     return;
   }
 
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id)).limit(1);
+  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.organizationId, organization.id)).limit(1);
   const totalBudget = parseFloat(campaign.totalBudget);
   if (!wallet || parseFloat(wallet.creditBalance) < totalBudget) {
     res.status(400).json({ error: "Insufficient credits" });
@@ -175,6 +178,7 @@ router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
 
   await db.insert(transactionsTable).values({
     userId: user.id,
+    organizationId: organization.id,
     walletId: wallet.id,
     type: "spend",
     amount: totalBudget.toFixed(2),
@@ -187,11 +191,12 @@ router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
 
   const [updated] = await db.update(campaignsTable)
     .set({ status: "active", launchedAt: new Date(), creditsUsed: totalBudget.toFixed(2) })
-    .where(eq(campaignsTable.id, idParsed.data.id))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .returning();
 
   await db.insert(activityTable).values({
     userId: user.id,
+    organizationId: organization.id,
     type: "campaign_launched",
     title: "Campaign Launched",
     description: `"${campaign.name}" is now live on ${campaign.platform}`,
@@ -204,6 +209,7 @@ router.post("/campaigns/:id/launch", requireAuth, async (req, res) => {
 
 router.post("/campaigns/:id/pause", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const idParsed = PauseCampaignParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!idParsed.success) {
     res.status(400).json({ error: "Invalid ID" });
@@ -212,7 +218,7 @@ router.post("/campaigns/:id/pause", requireAuth, async (req, res) => {
 
   const [updated] = await db.update(campaignsTable)
     .set({ status: "paused" })
-    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.userId, user.id)))
+    .where(and(eq(campaignsTable.id, idParsed.data.id), eq(campaignsTable.organizationId, organization.id)))
     .returning();
   if (!updated) {
     res.status(404).json({ error: "Campaign not found" });
@@ -221,6 +227,7 @@ router.post("/campaigns/:id/pause", requireAuth, async (req, res) => {
 
   await db.insert(activityTable).values({
     userId: user.id,
+    organizationId: organization.id,
     type: "campaign_paused",
     title: "Campaign Paused",
     description: `"${updated.name}" has been paused`,

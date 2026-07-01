@@ -1,7 +1,14 @@
 import crypto from "crypto";
 import { Request, Response, NextFunction } from "express";
-import { db, usersTable, walletsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import {
+  db,
+  usersTable,
+  walletsTable,
+  organizationsTable,
+  organizationMembersTable,
+  type User,
+} from "@workspace/db";
+import { and, eq } from "drizzle-orm";
 import { supabase } from "./supabase.service";
 
 const SESSION_SECRET = process.env.SESSION_SECRET ?? "adwallet-secret-key";
@@ -48,6 +55,108 @@ const COUNTRY_CURRENCY: Record<string, string> = {
   MR: "MRU", TG: "XOF", BJ: "XOF", LY: "LYD",
 };
 
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48) || "organization";
+}
+
+async function ensureWalletForOrganization(user: User, organizationId: number, currency: string): Promise<void> {
+  const [wallet] = await db
+    .select()
+    .from(walletsTable)
+    .where(and(eq(walletsTable.userId, user.id), eq(walletsTable.organizationId, organizationId)))
+    .limit(1);
+
+  if (!wallet) {
+    await db.insert(walletsTable).values({
+      userId: user.id,
+      organizationId,
+      creditBalance: "0",
+      totalDeposited: "0",
+      totalSpent: "0",
+      currency,
+    });
+  }
+}
+
+export async function ensureDefaultOrganizationForUser(user: User, currency = "GHS") {
+  const [membership] = await db
+    .select()
+    .from(organizationMembersTable)
+    .where(eq(organizationMembersTable.userId, user.id))
+    .limit(1);
+
+  if (membership) {
+    const [organization] = await db
+      .select()
+      .from(organizationsTable)
+      .where(eq(organizationsTable.id, membership.organizationId))
+      .limit(1);
+
+    if (organization) {
+      await ensureWalletForOrganization(user, organization.id, currency);
+      return organization;
+    }
+  }
+
+  const baseName = user.businessName ?? `${user.name}'s Organization`;
+  const baseSlug = slugify(user.businessName ?? user.name);
+  const slug = `${baseSlug}-${user.id}`;
+
+  const [organization] = await db
+    .insert(organizationsTable)
+    .values({
+      name: baseName,
+      slug,
+      ownerUserId: user.id,
+    })
+    .returning();
+
+  await db.insert(organizationMembersTable).values({
+    organizationId: organization.id,
+    userId: user.id,
+    role: "owner",
+  });
+
+  await ensureWalletForOrganization(user, organization.id, currency);
+  return organization;
+}
+
+async function resolveActiveOrganization(req: Request, user: User, currency = "GHS") {
+  const requestedOrganizationId = Number(req.headers["x-organization-id"]);
+
+  if (Number.isInteger(requestedOrganizationId) && requestedOrganizationId > 0) {
+    const [membership] = await db
+      .select()
+      .from(organizationMembersTable)
+      .where(
+        and(
+          eq(organizationMembersTable.userId, user.id),
+          eq(organizationMembersTable.organizationId, requestedOrganizationId),
+        ),
+      )
+      .limit(1);
+
+    if (membership) {
+      const [organization] = await db
+        .select()
+        .from(organizationsTable)
+        .where(eq(organizationsTable.id, membership.organizationId))
+        .limit(1);
+
+      if (organization) {
+        await ensureWalletForOrganization(user, organization.id, currency);
+        return organization;
+      }
+    }
+  }
+
+  return ensureDefaultOrganizationForUser(user, currency);
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
@@ -85,17 +194,15 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
 
       user = newUser;
 
-      // Provision corresponding wallet
-      await db.insert(walletsTable).values({
-        userId: user.id,
-        creditBalance: "0",
-        totalDeposited: "0",
-        totalSpent: "0",
-        currency,
-      });
+      await ensureDefaultOrganizationForUser(user, currency);
     }
 
+    const country = supabaseUser.user_metadata?.country || "GH";
+    const currency = COUNTRY_CURRENCY[country.toUpperCase()] ?? "GHS";
+    const organization = await resolveActiveOrganization(req, user, currency);
+
     (req as any).user = user;
+    (req as any).organization = organization;
     next();
   } catch (err: any) {
     req.log?.error({ err }, "Authentication middleware error");

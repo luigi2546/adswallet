@@ -4,6 +4,7 @@ import {
   koraVirtualCardsTable,
   cardAdAccountsTable,
   walletsTable,
+  transactionsTable,
   activityTable,
 } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
@@ -18,6 +19,7 @@ const router = Router();
 
 router.post("/kora/cards", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const { amountUsd, spendingLimit, purpose } = req.body;
 
   if (!amountUsd || amountUsd <= 0) {
@@ -32,7 +34,7 @@ router.post("/kora/cards", requireAuth, async (req, res) => {
   const [wallet] = await db
     .select()
     .from(walletsTable)
-    .where(eq(walletsTable.userId, user.id))
+    .where(eq(walletsTable.organizationId, organization.id))
     .limit(1);
 
   if (!wallet) {
@@ -69,6 +71,7 @@ router.post("/kora/cards", requireAuth, async (req, res) => {
       .insert(koraVirtualCardsTable)
       .values({
         userId: user.id,
+        organizationId: organization.id,
         walletId: wallet.id,
         koraCardId: cardData.id,
         cardNumberEnc,
@@ -94,9 +97,23 @@ router.post("/kora/cards", requireAuth, async (req, res) => {
       })
       .where(eq(walletsTable.id, wallet.id));
 
+    await db.insert(transactionsTable).values({
+      userId: user.id,
+      organizationId: organization.id,
+      walletId: wallet.id,
+      type: "spend",
+      amount: amountUsd.toFixed(2),
+      credits: amountUsd.toFixed(2),
+      status: "completed",
+      description: `Virtual card funding: ****${last4}`,
+      reference: card.koraCardId,
+      method: null,
+    });
+
     // Log activity
     await db.insert(activityTable).values({
       userId: user.id,
+      organizationId: organization.id,
       type: "credits_deducted",
       title: "Virtual Card Created",
       description: `$${amountUsd.toFixed(2)} USD virtual card issued (****${last4})`,
@@ -131,10 +148,10 @@ router.post("/kora/cards", requireAuth, async (req, res) => {
 // ── List User's Cards ──────────────────────────────────────────────────────────
 
 router.get("/kora/cards", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const statusFilter = req.query.status as string | undefined;
 
-  const conditions = [eq(koraVirtualCardsTable.userId, user.id)];
+  const conditions = [eq(koraVirtualCardsTable.organizationId, organization.id)];
   // Note: status filter would need a cast; for simplicity we filter in-app
   const cards = await db
     .select()
@@ -150,7 +167,7 @@ router.get("/kora/cards", requireAuth, async (req, res) => {
   const allAdAccounts = await db
     .select()
     .from(cardAdAccountsTable)
-    .where(eq(cardAdAccountsTable.userId, user.id));
+    .where(eq(cardAdAccountsTable.organizationId, organization.id));
 
   const adAccountCounts = new Map<number, number>();
   for (const aa of allAdAccounts) {
@@ -176,7 +193,7 @@ router.get("/kora/cards", requireAuth, async (req, res) => {
 // ── Get Card Details ───────────────────────────────────────────────────────────
 
 router.get("/kora/cards/:id", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const cardId = parseInt(req.params.id as string, 10);
 
   if (isNaN(cardId)) {
@@ -190,7 +207,7 @@ router.get("/kora/cards/:id", requireAuth, async (req, res) => {
     .where(
       and(
         eq(koraVirtualCardsTable.id, cardId),
-        eq(koraVirtualCardsTable.userId, user.id),
+        eq(koraVirtualCardsTable.organizationId, organization.id),
       ),
     )
     .limit(1);
@@ -204,7 +221,7 @@ router.get("/kora/cards/:id", requireAuth, async (req, res) => {
   const adAccounts = await db
     .select()
     .from(cardAdAccountsTable)
-    .where(eq(cardAdAccountsTable.cardId, card.id));
+    .where(and(eq(cardAdAccountsTable.cardId, card.id), eq(cardAdAccountsTable.organizationId, organization.id)));
 
   res.json({
     id: card.id,
@@ -223,7 +240,7 @@ router.get("/kora/cards/:id", requireAuth, async (req, res) => {
 // ── Update Card Status (Freeze / Close) ────────────────────────────────────────
 
 router.patch("/kora/cards/:id/status", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const cardId = parseInt(req.params.id as string, 10);
   const { status } = req.body;
 
@@ -243,7 +260,7 @@ router.patch("/kora/cards/:id/status", requireAuth, async (req, res) => {
     .where(
       and(
         eq(koraVirtualCardsTable.id, cardId),
-        eq(koraVirtualCardsTable.userId, user.id),
+        eq(koraVirtualCardsTable.organizationId, organization.id),
       ),
     )
     .limit(1);
@@ -285,6 +302,7 @@ router.patch("/kora/cards/:id/status", requireAuth, async (req, res) => {
 
 router.post("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const cardId = parseInt(req.params.id as string, 10);
   const { adPlatform, adAccountId, adAccountName } = req.body;
 
@@ -311,7 +329,7 @@ router.post("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
     .where(
       and(
         eq(koraVirtualCardsTable.id, cardId),
-        eq(koraVirtualCardsTable.userId, user.id),
+        eq(koraVirtualCardsTable.organizationId, organization.id),
       ),
     )
     .limit(1);
@@ -335,6 +353,7 @@ router.post("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
         eq(cardAdAccountsTable.cardId, cardId),
         eq(cardAdAccountsTable.adAccountId, adAccountId),
         eq(cardAdAccountsTable.adPlatform, adPlatform),
+        eq(cardAdAccountsTable.organizationId, organization.id),
       ),
     )
     .limit(1);
@@ -349,6 +368,7 @@ router.post("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
     .values({
       cardId,
       userId: user.id,
+      organizationId: organization.id,
       adPlatform,
       adAccountId,
       adAccountName,
@@ -369,7 +389,7 @@ router.post("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
 // ── List Linked Ad Accounts ────────────────────────────────────────────────────
 
 router.get("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const cardId = parseInt(req.params.id as string, 10);
 
   if (isNaN(cardId)) {
@@ -384,7 +404,7 @@ router.get("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
     .where(
       and(
         eq(koraVirtualCardsTable.id, cardId),
-        eq(koraVirtualCardsTable.userId, user.id),
+        eq(koraVirtualCardsTable.organizationId, organization.id),
       ),
     )
     .limit(1);
@@ -397,7 +417,7 @@ router.get("/kora/cards/:id/ad-accounts", requireAuth, async (req, res) => {
   const adAccounts = await db
     .select()
     .from(cardAdAccountsTable)
-    .where(eq(cardAdAccountsTable.cardId, cardId))
+    .where(and(eq(cardAdAccountsTable.cardId, cardId), eq(cardAdAccountsTable.organizationId, organization.id)))
     .orderBy(desc(cardAdAccountsTable.createdAt));
 
   res.json({

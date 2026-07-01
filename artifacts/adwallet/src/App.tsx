@@ -18,6 +18,7 @@ import CampaignsPage from "./pages/campaigns/index";
 import NewCampaignPage from "./pages/campaigns/new";
 import CampaignDetail from "./pages/campaigns/detail";
 import AnalyticsPage from "./pages/analytics";
+import SocialInsightsPage from "./pages/social-insights";
 import SettingsPage from "./pages/settings";
 import BoostPage from "./pages/boost";
 import FeaturesPage from "./pages/features";
@@ -101,6 +102,7 @@ function Router() {
       <Route path="/campaigns/:id"><ProtectedRoute component={CampaignDetail} /></Route>
       <Route path="/boost"><ProtectedRoute component={BoostPage} /></Route>
       <Route path="/analytics"><ProtectedRoute component={AnalyticsPage} /></Route>
+      <Route path="/social-insights"><ProtectedRoute component={SocialInsightsPage} /></Route>
       <Route path="/settings"><ProtectedRoute component={SettingsPage} /></Route>
 
       <Route component={NotFound} />

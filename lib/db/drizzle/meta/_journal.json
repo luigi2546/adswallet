@@ -8,6 +8,13 @@
       "when": 1781059952010,
       "tag": "0000_uneven_cable",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1782864000000,
+      "tag": "0001_multi_tenant_ledger",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { pgTable, serial, integer, numeric, text, timestamp, pgEnum } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 
 export const platformEnum = pgEnum("platform", ["facebook", "instagram", "tiktok", "google", "youtube"]);
 export const campaignObjectiveEnum = pgEnum("campaign_objective", ["awareness", "engagement", "traffic", "leads", "sales"]);
@@ -10,6 +11,7 @@ export const campaignStatusEnum = pgEnum("campaign_status", ["draft", "active", 
 export const campaignsTable = pgTable("campaigns", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   name: text("name").notNull(),
   platform: platformEnum("platform").notNull(),
   objective: campaignObjectiveEnum("objective").notNull(),

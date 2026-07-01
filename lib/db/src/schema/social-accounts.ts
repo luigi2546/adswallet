@@ -1,5 +1,6 @@
 import { pgTable, serial, integer, text, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 import { platformEnum } from "./campaigns";
 
 export const socialAccountStatusEnum = pgEnum("social_account_status", ["connected", "expired", "error"]);
@@ -7,6 +8,7 @@ export const socialAccountStatusEnum = pgEnum("social_account_status", ["connect
 export const socialAccountsTable = pgTable("social_accounts", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   platform: platformEnum("platform").notNull(),
   accountName: text("account_name").notNull(),
   accountHandle: text("account_handle").notNull(),

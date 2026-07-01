@@ -28,16 +28,17 @@ router.get("/oauth/connect/:platform", requireAuth, async (req, res) => {
   }
 
   const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const frontendBase = `https://${getAppDomain()}/settings`;
 
   if (isDemoMode(platform)) {
     const profile = getDemoProfile(platform);
-    await upsertSocialAccount(userId, platform, profile);
+    await upsertSocialAccount(userId, organization.id, platform, profile);
     res.json({ url: `${frontendBase}?oauth_success=${platform}&demo=true`, demo: true });
     return;
   }
 
-  const state = generateState(userId, platform);
+  const state = generateState(userId, platform, organization.id);
   const url = buildOAuthUrl(platform, state);
   res.json({ url, demo: false });
 });
@@ -65,13 +66,13 @@ router.get("/oauth/callback/:platform", async (req, res) => {
     return;
   }
 
-  const { userId } = stateData;
+  const { userId, organizationId } = stateData;
 
   try {
     const tokens = await exchangeCodeForToken(platform, code);
     const profile = await fetchPlatformProfile(platform, tokens.access_token);
 
-    await upsertSocialAccount(userId, platform, profile);
+    await upsertSocialAccount(userId, organizationId, platform, profile);
 
     const expiresAt = tokens.expires_in
       ? new Date(Date.now() + tokens.expires_in * 1000)
@@ -81,6 +82,7 @@ router.get("/oauth/callback/:platform", async (req, res) => {
       .insert(oauthTokensTable)
       .values({
         userId,
+        organizationId,
         platform: platform as any,
         accessToken: tokens.access_token,
         refreshToken: tokens.refresh_token ?? null,
@@ -91,8 +93,9 @@ router.get("/oauth/callback/:platform", async (req, res) => {
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: [oauthTokensTable.userId, oauthTokensTable.platform],
+        target: [oauthTokensTable.organizationId, oauthTokensTable.platform],
         set: {
+          userId,
           accessToken: tokens.access_token,
           refreshToken: tokens.refresh_token ?? null,
           expiresAt,
@@ -112,13 +115,13 @@ router.get("/oauth/callback/:platform", async (req, res) => {
 // GET /api/oauth/status
 // Returns which platforms have valid tokens for the current user
 router.get("/oauth/status", requireAuth, async (req, res) => {
-  const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const tokens = await db.select({
     platform: oauthTokensTable.platform,
     expiresAt: oauthTokensTable.expiresAt,
     platformUsername: oauthTokensTable.platformUsername,
     updatedAt: oauthTokensTable.updatedAt,
-  }).from(oauthTokensTable).where(eq(oauthTokensTable.userId, userId));
+  }).from(oauthTokensTable).where(eq(oauthTokensTable.organizationId, organization.id));
 
   const status = tokens.reduce((acc, t) => {
     const expired = t.expiresAt ? t.expiresAt < new Date() : false;
@@ -137,11 +140,11 @@ router.get("/oauth/status", requireAuth, async (req, res) => {
 // DELETE /api/oauth/:platform
 // Revoke token for a platform
 router.delete("/oauth/:platform", requireAuth, async (req, res) => {
-  const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const platform = req.params.platform as string;
 
   await db.delete(oauthTokensTable).where(
-    and(eq(oauthTokensTable.userId, userId), eq(oauthTokensTable.platform, platform as any))
+    and(eq(oauthTokensTable.organizationId, organization.id), eq(oauthTokensTable.platform, platform as any))
   );
 
   res.status(204).send();
@@ -151,11 +154,12 @@ router.delete("/oauth/:platform", requireAuth, async (req, res) => {
 
 async function upsertSocialAccount(
   userId: number,
+  organizationId: number,
   platform: string,
   profile: { platformUserId: string; accountName: string; accountHandle: string; avatarUrl: string | null; followers: number }
 ) {
   const existing = await db.select().from(socialAccountsTable).where(
-    and(eq(socialAccountsTable.userId, userId), eq(socialAccountsTable.platform, platform as any))
+    and(eq(socialAccountsTable.organizationId, organizationId), eq(socialAccountsTable.platform, platform as any))
   ).limit(1);
 
   if (existing.length > 0) {
@@ -165,10 +169,11 @@ async function upsertSocialAccount(
       avatarUrl: profile.avatarUrl,
       followers: profile.followers,
       status: "connected",
-    }).where(and(eq(socialAccountsTable.userId, userId), eq(socialAccountsTable.platform, platform as any)));
+    }).where(and(eq(socialAccountsTable.organizationId, organizationId), eq(socialAccountsTable.platform, platform as any)));
   } else {
     await db.insert(socialAccountsTable).values({
       userId,
+      organizationId,
       platform: platform as any,
       accountName: profile.accountName,
       accountHandle: profile.accountHandle,

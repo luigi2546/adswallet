@@ -106,7 +106,11 @@ function generateMockPosts(account: { id: number; platform: string; accountName:
 // GET /social-accounts
 router.get("/social-accounts", requireAuth, async (req, res) => {
   const userId = (req as any).user.id;
-  const accounts = await db.select().from(socialAccountsTable).where(eq(socialAccountsTable.userId, userId));
+  const organization = (req as any).organization;
+  const accounts = await db
+    .select()
+    .from(socialAccountsTable)
+    .where(eq(socialAccountsTable.organizationId, organization.id));
 
   res.json(accounts.map(a => ({
     id: a.id,
@@ -123,6 +127,7 @@ router.get("/social-accounts", requireAuth, async (req, res) => {
 // POST /social-accounts
 router.post("/social-accounts", requireAuth, async (req, res) => {
   const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const parsed = connectAccountSchema.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid input", details: parsed.error.issues });
@@ -134,6 +139,7 @@ router.post("/social-accounts", requireAuth, async (req, res) => {
 
   const [account] = await db.insert(socialAccountsTable).values({
     userId,
+    organizationId: organization.id,
     platform,
     accountName,
     accountHandle,
@@ -155,11 +161,11 @@ router.post("/social-accounts", requireAuth, async (req, res) => {
 
 // DELETE /social-accounts/:id
 router.delete("/social-accounts/:id", requireAuth, async (req, res) => {
-  const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const id = parseInt(req.params.id as string, 10);
 
   await db.delete(socialAccountsTable).where(
-    and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.userId, userId))
+    and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.organizationId, organization.id))
   );
 
   res.status(204).send();
@@ -167,11 +173,11 @@ router.delete("/social-accounts/:id", requireAuth, async (req, res) => {
 
 // GET /social-accounts/:id/posts
 router.get("/social-accounts/:id/posts", requireAuth, async (req, res) => {
-  const userId = (req as any).user.id;
+  const organization = (req as any).organization;
   const id = parseInt(req.params.id as string, 10);
 
   const [account] = await db.select().from(socialAccountsTable).where(
-    and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.userId, userId))
+    and(eq(socialAccountsTable.id, id), eq(socialAccountsTable.organizationId, organization.id))
   ).limit(1);
 
   if (!account) {
@@ -181,7 +187,7 @@ router.get("/social-accounts/:id/posts", requireAuth, async (req, res) => {
 
   // Try to use real OAuth token if available and not expired
   const [token] = await db.select().from(oauthTokensTable).where(
-    and(eq(oauthTokensTable.userId, userId), eq(oauthTokensTable.platform, account.platform))
+    and(eq(oauthTokensTable.organizationId, organization.id), eq(oauthTokensTable.platform, account.platform))
   ).limit(1);
 
   const hasValidToken = token && (!token.expiresAt || token.expiresAt > new Date());

@@ -2,6 +2,7 @@ import { pgTable, serial, integer, numeric, text, timestamp, pgEnum } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 
 export const transactionTypeEnum = pgEnum("transaction_type", ["deposit", "spend", "refund"]);
 export const transactionStatusEnum = pgEnum("transaction_status", ["pending", "completed", "failed"]);
@@ -10,6 +11,7 @@ export const depositMethodEnum = pgEnum("deposit_method", ["momo", "bank_transfe
 export const walletsTable = pgTable("wallets", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   creditBalance: numeric("credit_balance", { precision: 18, scale: 2 }).notNull().default("0"),
   totalDeposited: numeric("total_deposited", { precision: 18, scale: 2 }).notNull().default("0"),
   totalSpent: numeric("total_spent", { precision: 18, scale: 2 }).notNull().default("0"),
@@ -20,6 +22,7 @@ export const walletsTable = pgTable("wallets", {
 export const transactionsTable = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   walletId: integer("wallet_id").notNull().references(() => walletsTable.id),
   type: transactionTypeEnum("type").notNull(),
   amount: numeric("amount", { precision: 18, scale: 2 }).notNull(),

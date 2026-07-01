@@ -5,6 +5,7 @@ import {
   koraDepositsTable,
   koraWebhooksTable,
   walletsTable,
+  transactionsTable,
   activityTable,
 } from "@workspace/db";
 import { eq, desc, and } from "drizzle-orm";
@@ -17,10 +18,15 @@ const router = Router();
 const ADWALLET_FEE_PERCENT = parseFloat(process.env.ADWALLET_FEE_PERCENT ?? "1.5");
 const EXCHANGE_RATE_MARKUP_PERCENT = 1.0; // 1% markup on Kora's rate
 
+function toTransactionMethod(paymentMethod: string): "momo" | "bank_transfer" | "card" {
+  return paymentMethod === "mobile_money" ? "momo" : paymentMethod as "bank_transfer" | "card";
+}
+
 // ── Initialize Deposit ─────────────────────────────────────────────────────────
 
 router.post("/kora/deposits/initialize", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const { amount, currency, paymentMethod, provider, phone, email } = req.body;
 
   if (!amount || !currency || !paymentMethod) {
@@ -39,11 +45,17 @@ router.post("/kora/deposits/initialize", requireAuth, async (req, res) => {
     return;
   }
 
+  const validPaymentMethods = ["mobile_money", "bank_transfer", "card"];
+  if (!validPaymentMethods.includes(paymentMethod)) {
+    res.status(400).json({ error: `paymentMethod must be one of: ${validPaymentMethods.join(", ")}` });
+    return;
+  }
+
   // Get wallet
   const [wallet] = await db
     .select()
     .from(walletsTable)
-    .where(eq(walletsTable.userId, user.id))
+    .where(eq(walletsTable.organizationId, organization.id))
     .limit(1);
 
   if (!wallet) {
@@ -72,6 +84,7 @@ router.post("/kora/deposits/initialize", requireAuth, async (req, res) => {
       .insert(koraDepositsTable)
       .values({
         userId: user.id,
+        organizationId: organization.id,
         walletId: wallet.id,
         koraReference: reference,
         amountLocal: amount.toFixed(2),
@@ -107,7 +120,7 @@ router.post("/kora/deposits/initialize", requireAuth, async (req, res) => {
 // ── Get Deposit Status ─────────────────────────────────────────────────────────
 
 router.get("/kora/deposits/:id/status", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const depositId = parseInt(req.params.id as string, 10);
 
   if (isNaN(depositId)) {
@@ -119,7 +132,7 @@ router.get("/kora/deposits/:id/status", requireAuth, async (req, res) => {
     .select()
     .from(koraDepositsTable)
     .where(
-      and(eq(koraDepositsTable.id, depositId), eq(koraDepositsTable.userId, user.id)),
+      and(eq(koraDepositsTable.id, depositId), eq(koraDepositsTable.organizationId, organization.id)),
     )
     .limit(1);
 
@@ -163,7 +176,7 @@ router.get("/kora/deposits/:id/status", requireAuth, async (req, res) => {
 // ── List Deposits ──────────────────────────────────────────────────────────────
 
 router.get("/kora/deposits", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const page = parseInt((req.query.page as string) ?? "1", 10) || 1;
   const limit = Math.min(parseInt((req.query.limit as string) ?? "20", 10) || 20, 100);
   const offset = (page - 1) * limit;
@@ -171,14 +184,14 @@ router.get("/kora/deposits", requireAuth, async (req, res) => {
   const deposits = await db
     .select()
     .from(koraDepositsTable)
-    .where(eq(koraDepositsTable.userId, user.id))
+    .where(eq(koraDepositsTable.organizationId, organization.id))
     .orderBy(desc(koraDepositsTable.createdAt))
     .limit(limit)
     .offset(offset);
 
   const total = await db.$count(
     koraDepositsTable,
-    eq(koraDepositsTable.userId, user.id),
+    eq(koraDepositsTable.organizationId, organization.id),
   );
 
   res.json({
@@ -208,7 +221,7 @@ router.post("/kora/webhooks", async (req, res) => {
 
   // Verify webhook signature
   if (signature) {
-    const rawBody = JSON.stringify(req.body);
+    const rawBody = (req as any).rawBody ?? Buffer.from(JSON.stringify(req.body));
     const isValid = koraService.verifyWebhookSignature(rawBody, signature);
     if (!isValid) {
       logger.warn("Invalid Kora webhook signature");
@@ -301,11 +314,25 @@ router.post("/kora/webhooks", async (req, res) => {
           totalDeposited: newTotal.toFixed(2),
         })
         .where(eq(walletsTable.id, wallet.id));
+
+      await db.insert(transactionsTable).values({
+        userId: deposit.userId,
+        organizationId: deposit.organizationId,
+        walletId: wallet.id,
+        type: "deposit",
+        amount: amountUsd.toFixed(2),
+        credits: amountUsd.toFixed(2),
+        status: "completed",
+        description: `${parseFloat(deposit.amountLocal).toFixed(2)} ${deposit.localCurrency} Kora deposit credited`,
+        reference: deposit.koraReference,
+        method: toTransactionMethod(deposit.paymentMethod),
+      });
     }
 
     // Log activity
     await db.insert(activityTable).values({
       userId: deposit.userId,
+      organizationId: deposit.organizationId,
       type: "deposit",
       title: "Kora Deposit Completed",
       description: `${parseFloat(deposit.amountLocal).toFixed(2)} ${deposit.localCurrency} → $${amountUsd.toFixed(2)} USD credited`,

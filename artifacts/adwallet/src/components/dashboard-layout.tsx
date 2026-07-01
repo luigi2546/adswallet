@@ -7,6 +7,7 @@ import {
   CreditCard,
   Megaphone, 
   BarChart3, 
+  LineChart,
   Settings, 
   LogOut,
   Menu,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/cards", label: "Virtual Cards", icon: CreditCard },
   { href: "/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/social-insights", label: "Social Insights", icon: LineChart },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

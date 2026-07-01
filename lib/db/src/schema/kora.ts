@@ -2,6 +2,7 @@ import { pgTable, serial, integer, numeric, text, timestamp, pgEnum, uniqueIndex
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 import { walletsTable } from "./wallets";
 
 // ── Enums ──────────────────────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ export const cardPurposeEnum = pgEnum("card_purpose", [
 export const koraDepositsTable = pgTable("kora_deposits", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   walletId: integer("wallet_id").notNull().references(() => walletsTable.id),
   koraReference: text("kora_reference").notNull().unique(),
   amountLocal: numeric("amount_local", { precision: 18, scale: 2 }).notNull(),
@@ -66,6 +68,7 @@ export const koraDepositsTable = pgTable("kora_deposits", {
 export const koraVirtualCardsTable = pgTable("kora_virtual_cards", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   walletId: integer("wallet_id").notNull().references(() => walletsTable.id),
   koraCardId: text("kora_card_id").notNull().unique(),
   cardNumberEnc: text("card_number_enc").notNull(), // AES-256-GCM encrypted
@@ -88,6 +91,7 @@ export const cardAdAccountsTable = pgTable("card_ad_accounts", {
   id: serial("id").primaryKey(),
   cardId: integer("card_id").notNull().references(() => koraVirtualCardsTable.id),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   adPlatform: adPlatformEnum("ad_platform").notNull(),
   adAccountId: text("ad_account_id").notNull(),
   adAccountName: text("ad_account_name").notNull(),

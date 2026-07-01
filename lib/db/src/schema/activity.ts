@@ -2,6 +2,7 @@ import { pgTable, serial, integer, numeric, text, timestamp, pgEnum } from "driz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
+import { organizationsTable } from "./organizations";
 import { campaignsTable } from "./campaigns";
 
 export const activityTypeEnum = pgEnum("activity_type", [
@@ -16,6 +17,7 @@ export const activityTypeEnum = pgEnum("activity_type", [
 export const activityTable = pgTable("activity", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => usersTable.id),
+  organizationId: integer("organization_id").notNull().references(() => organizationsTable.id),
   type: activityTypeEnum("type").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),

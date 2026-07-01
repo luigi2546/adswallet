@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { db, usersTable, walletsTable } from "@workspace/db";
+import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { requireAuth } from "../lib/auth";
+import { ensureDefaultOrganizationForUser, requireAuth } from "../lib/auth";
 import { RegisterBody, LoginBody } from "@workspace/api-zod";
 import { supabase } from "../lib/supabase.service";
 
@@ -63,14 +63,8 @@ router.post("/auth/register", async (req, res) => {
       role: "user",
     }).returning();
 
-    // 4. Create local wallet
-    await db.insert(walletsTable).values({
-      userId: user.id,
-      creditBalance: "0",
-      totalDeposited: "0",
-      totalSpent: "0",
-      currency,
-    });
+    // 4. Create default tenant and wallet
+    const organization = await ensureDefaultOrganizationForUser(user, currency);
 
     // 5. Sign in newly registered user via Supabase SDK to get JWT access token
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -91,6 +85,8 @@ router.post("/auth/register", async (req, res) => {
         role: user.role,
         businessName: user.businessName ?? null,
         avatarUrl: user.avatarUrl ?? null,
+        organizationId: organization.id,
+        organizationName: organization.name,
         createdAt: user.createdAt.toISOString(),
       },
       token: authData.session.access_token,
@@ -143,14 +139,13 @@ router.post("/auth/login", async (req, res) => {
 
       user = newUser;
 
-      await db.insert(walletsTable).values({
-        userId: user.id,
-        creditBalance: "0",
-        totalDeposited: "0",
-        totalSpent: "0",
-        currency,
-      });
+      await ensureDefaultOrganizationForUser(user, currency);
     }
+
+    const organization = await ensureDefaultOrganizationForUser(
+      user,
+      COUNTRY_CURRENCY[(supabaseUser.user_metadata?.country || "GH").toUpperCase()] ?? "GHS",
+    );
 
     res.json({
       user: {
@@ -160,6 +155,8 @@ router.post("/auth/login", async (req, res) => {
         role: user.role,
         businessName: user.businessName ?? null,
         avatarUrl: user.avatarUrl ?? null,
+        organizationId: organization.id,
+        organizationName: organization.name,
         createdAt: user.createdAt.toISOString(),
       },
       token: authData.session.access_token,
@@ -179,6 +176,8 @@ router.get("/auth/me", requireAuth, async (req, res) => {
     role: user.role,
     businessName: user.businessName ?? null,
     avatarUrl: user.avatarUrl ?? null,
+    organizationId: (req as any).organization?.id ?? null,
+    organizationName: (req as any).organization?.name ?? null,
     createdAt: user.createdAt.toISOString(),
   });
 });

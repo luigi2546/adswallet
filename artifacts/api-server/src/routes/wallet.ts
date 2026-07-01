@@ -7,8 +7,12 @@ import { DepositFundsBody, GetTransactionsQueryParams } from "@workspace/api-zod
 const router = Router();
 
 router.get("/wallet", requireAuth, async (req, res) => {
-  const user = (req as any).user;
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id)).limit(1);
+  const organization = (req as any).organization;
+  const [wallet] = await db
+    .select()
+    .from(walletsTable)
+    .where(eq(walletsTable.organizationId, organization.id))
+    .limit(1);
   if (!wallet) {
     res.status(404).json({ error: "Wallet not found" });
     return;
@@ -16,6 +20,7 @@ router.get("/wallet", requireAuth, async (req, res) => {
   res.json({
     id: wallet.id,
     userId: wallet.userId,
+    organizationId: wallet.organizationId,
     creditBalance: parseFloat(wallet.creditBalance),
     totalDeposited: parseFloat(wallet.totalDeposited),
     totalSpent: parseFloat(wallet.totalSpent),
@@ -25,6 +30,7 @@ router.get("/wallet", requireAuth, async (req, res) => {
 
 router.post("/wallet/deposit", requireAuth, async (req, res) => {
   const user = (req as any).user;
+  const organization = (req as any).organization;
   const parsed = DepositFundsBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid input" });
@@ -32,7 +38,11 @@ router.post("/wallet/deposit", requireAuth, async (req, res) => {
   }
   const { amount, method, phone, provider } = parsed.data;
 
-  const [wallet] = await db.select().from(walletsTable).where(eq(walletsTable.userId, user.id)).limit(1);
+  const [wallet] = await db
+    .select()
+    .from(walletsTable)
+    .where(eq(walletsTable.organizationId, organization.id))
+    .limit(1);
   if (!wallet) {
     res.status(404).json({ error: "Wallet not found" });
     return;
@@ -52,6 +62,7 @@ router.post("/wallet/deposit", requireAuth, async (req, res) => {
 
   const [tx] = await db.insert(transactionsTable).values({
     userId: user.id,
+    organizationId: organization.id,
     walletId: wallet.id,
     type: "deposit",
     amount: amount.toFixed(2),
@@ -64,6 +75,7 @@ router.post("/wallet/deposit", requireAuth, async (req, res) => {
 
   await db.insert(activityTable).values({
     userId: user.id,
+    organizationId: organization.id,
     type: "deposit",
     title: "Deposit Completed",
     description: `${amount.toFixed(2)} GHS deposited → ${amount.toFixed(2)} Ad Credits`,
@@ -84,13 +96,13 @@ router.post("/wallet/deposit", requireAuth, async (req, res) => {
 });
 
 router.get("/wallet/transactions", requireAuth, async (req, res) => {
-  const user = (req as any).user;
+  const organization = (req as any).organization;
   const params = GetTransactionsQueryParams.safeParse(req.query);
   const page = params.success ? (params.data.page ?? 1) : 1;
   const limit = params.success ? (params.data.limit ?? 20) : 20;
   const offset = (page - 1) * limit;
 
-  const conditions = [eq(transactionsTable.userId, user.id)];
+  const conditions = [eq(transactionsTable.organizationId, organization.id)];
 
   const txs = await db.select()
     .from(transactionsTable)
@@ -99,7 +111,10 @@ router.get("/wallet/transactions", requireAuth, async (req, res) => {
     .limit(limit)
     .offset(offset);
 
-  const total = await db.$count(transactionsTable, eq(transactionsTable.userId, user.id));
+  const total = await db.$count(
+    transactionsTable,
+    eq(transactionsTable.organizationId, organization.id),
+  );
 
   res.json({
     transactions: txs.map(tx => ({
